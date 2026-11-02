@@ -5,6 +5,7 @@
 - 入口：[模型源说明](../../model/README.md)、[版本清单](../../model/model.yaml)。
 - 业务依据：[已整体确认的发现稿](../scenarios/first-scenario/discovery.md)、[历轮原始确认](../sources/modeling-objective-2026-10-31.md)、[资料核对记录](../sources/business-brief-2026-10-31-intake.md)。
 - 状态：待业务与结构评审；全部元素 `draft`，无合入或发布结论。
+- 后续：2026-11-02 评审修订及新提案条目见[模型变更提案](ps-model-change-2026-11-02.md)，以该文件为准。
 
 ## 这次首次形成的表达
 
@@ -45,7 +46,7 @@ HTML 应从这些源定义读取对象、关系及属性，不能另建一套硬
 
 ## 关联元素
 
-`ctx.ps.preparation`、`goal.ps.autonomous_context`、`metric.ps.manual_context_categories`、`agg.ps.task`、`agg.ps.student_context`、`agg.ps.program_knowledge`、`obj.ps.task`、`obj.ps.draft`、`obj.ps.confirmation`、`rule.ps.current_version_checked`、`rule.ps.confirmed_fact_has_evidence`、`rule.ps.confirm_current_english`、`hdp.ps.length_measurement`。
+`ctx.ps.preparation`、`goal.ps.autonomous_context`、`metric.ps.manual_context_categories`、`agg.ps.task`、`agg.ps.student_context`、`agg.ps.program_knowledge`、`obj.ps.task`、`obj.ps.draft`、`obj.ps.confirmation`、`rule.ps.current_version_checked`、`rule.ps.confirm_current_english`、`hdp.ps.length_measurement`。
 
 <!-- MODEL-REFS:START -->
 ## 模型关联索引
@@ -90,8 +91,6 @@ HTML 应从这些源定义读取对象、关系及属性，不能另建一套硬
 - `evt.ps.student_context_refreshed`
 - `metric.ps.manual_context_categories`
 - `rule.ps.confirm_current_english`
-- `rule.ps.confirmed_fact_has_evidence`
 - `rule.ps.current_version_checked`
-- `rule.ps.customer_choice_evidence`
 - `rule.ps.length_measurement_unknown`
 <!-- MODEL-REFS:END -->

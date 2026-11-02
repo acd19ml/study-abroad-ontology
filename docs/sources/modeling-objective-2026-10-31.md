@@ -114,7 +114,8 @@
 - `hdp.ps.missing_requirements`
 - `rule.ps.confirm_current_chinese`
 - `rule.ps.confirmed_chinese_before_english`
-- `rule.ps.customer_choice_evidence`
+- `rule.ps.continuation_only_when_unmet`
+- `rule.ps.draft_facts_same_student`
 - `rule.ps.english_matches_chinese`
 - `rule.ps.generic_draft_optional`
 - `rule.ps.knowledge_persisted_before_use`

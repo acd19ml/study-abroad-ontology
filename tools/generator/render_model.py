@@ -79,7 +79,8 @@ def build_payload(root=ROOT):
         if kind=='metric':
             derived(e,'goal',e['goal'],'衡量目标');derived(e,'measures',e['measures'],'统计对象')
         if kind=='policy':
-            derived(e,'on',e['on'],'触发事件');derived(e,'then',e['then'],'目标命令')
+            if 'on' in e:derived(e,'on',e['on'],'触发事件')
+            derived(e,'then',e['then'],'目标命令')
         if kind=='mapping':derived(e,'element',e['element'],'实现对应')
 
     types=[]

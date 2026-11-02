@@ -174,6 +174,57 @@ def validate(root, manifest, schema, docs, phase=2, release=False):
         if not target or target['type']!='object' or not any(a['name']==parts[1] for a in target['attributes']):
             error('concept_references',f'{where}: invalid business attribute {value}')
 
+    def bind_source(bind,command,scope,where,single):
+        """Check one binding: a command parameter, or a relation path from a bound object."""
+        concept=bind['concept']
+        if index.get(concept,{}).get('type')!='object':
+            error('concept_references',f'{where}: binding target {concept} is not an object');return
+        if ('param' in bind)==('via' in bind):
+            error('concept_references',f'{where}: {concept} needs exactly one of param/via');return
+        if 'param' in bind:
+            if bind['param'] not in command.get('params',[]):
+                error('concept_references',f"{where}: {command['id']} has no param {bind['param']}")
+            return
+        current=None
+        for i,rid in enumerate(bind['via']):
+            relation=index.get(rid,{})
+            if relation.get('type')!='relation':
+                error('concept_references',f'{where}: {rid} is not a relation');return
+            if (i==0 and relation['from'] not in scope) or (i>0 and relation['from']!=current):
+                error('concept_references',f'{where}: path {bind["via"]} is not connected from a bound object');return
+            if single and relation['cardinality'] not in {'1','0..1'}:
+                error('concept_references',f'{where}: {rid} is a collection; bind it with exists/each');return
+            current=relation['to']
+        if current!=concept:error('concept_references',f'{where}: path ends at {current}, not {concept}')
+
+    def bound_condition(node,scope,command,where):
+        if 'concept' in node:
+            if node['concept'] not in scope:
+                error('concept_references',f"{where}: {node['concept']} is not bound for {command['id']}")
+            return
+        if 'op' not in node:return
+        inner=scope
+        if node['op'] in {'exists','each'} and 'bind' in node:
+            if node['bind']['concept'] in scope:error('concept_references',f"{where}: {node['bind']['concept']} is already bound")
+            bind_source(node['bind'],command,scope,where,False)
+            inner=scope|{node['bind']['concept']}
+        for child in node['args']:bound_condition(child,inner,command,where)
+
+    def check_rule_bindings(rule):
+        for binding in rule.get('bindings',[]):
+            if not set(binding.get('for',[]))<=set(rule['applies_to']):
+                error('concept_references',f"{rule['id']}: binding 'for' lists a command outside applies_to")
+        for target in rule['applies_to']:
+            command=index.get(target,{})
+            if command.get('type')!='command':continue
+            scope={command['root']}
+            for binding in rule.get('bindings',[]):
+                if 'for' in binding and target not in binding['for']:continue
+                if binding['concept'] in scope:error('concept_references',f"{rule['id']}: {binding['concept']} bound twice for {target}")
+                bind_source(binding,command,scope,rule['id'],True)
+                scope=scope|{binding['concept']}
+            bound_condition(rule['condition'],scope,command,rule['id'])
+
     for e in elements:
         if e['id'].split('.')[0]!=PREFIX.get(e['type'],e['type']):
             error('references',f"{e['id']}: prefix does not match type")
@@ -240,17 +291,26 @@ def validate(root, manifest, schema, docs, phase=2, release=False):
             def check_arity(node):
                 if 'op' not in node:return
                 arity=len(node['args']); op=node['op']
-                if (op in {'not','is_null'} and arity!=1) or (op in {'eq','ne','gt'} and arity!=2):
+                if (op in {'not','is_null','exists','each'} and arity!=1) or (op in {'eq','ne','gt'} and arity!=2):
                     error('concept_references',f"{e['id']}: invalid operator arity")
+                if (op in {'exists','each'})!=('bind' in node):
+                    error('concept_references',f"{e['id']}: only exists/each take bind, and they require it")
                 for child in node['args']: check_arity(child)
             check_arity(e['condition'])
+            check_rule_bindings(e)
             if e['action']=='escalate' and not any(h['type']=='human_decision_point' and h['at']==e['id'] for h in elements):
                 error('rule_completeness',f"{e['id']}: escalation lacks a human decision point")
+            if e['action']=='escalate':
+                for cid in e['applies_to']:
+                    if index.get(index.get(cid,{}).get('role'),{}).get('kind')=='human':
+                        error('rule_completeness',f"{e['id']}: escalation on human-executed {cid} hands nothing off; use flag")
         if e['type']=='human_decision_point':
             typed(e['at'],{'command','rule'},e['id'])
             if index.get(e['owner'],{}).get('kind')!='human': error('rule_completeness',f"{e['id']}: decision owner must be human")
         if e['type']=='policy':
-            typed(e['on'],{'event'},e['id']);typed(e['then'],{'command'},e['id'])
+            if ('on' in e)==('schedule' in e):error('references',f"{e['id']}: policy needs exactly one of on/schedule")
+            if 'on' in e:typed(e['on'],{'event'},e['id'])
+            typed(e['then'],{'command'},e['id'])
         if e['type']=='metric':
             typed(e['measures'],{'object','event'},e['id']);typed(e['goal'],{'goal'},e['id'])
             for value in e['inputs']: attribute_ref(value,e['id'])
@@ -286,6 +346,14 @@ def validate(root, manifest, schema, docs, phase=2, release=False):
             else:
                 starts=c['allowed_in']
                 if not starts or not set(starts)<=states:error('state_closure',f"{c['id']}: invalid pre-states")
+            if c['transition']['to']=='previous':
+                # Return to the state held before entering the start state, e.g. restoring a withdrawn task.
+                entries={s for other in elements if other['type']=='command' and other['root']==o['id']
+                         and other['transition']['to'] in starts for s in other['allowed_in']}
+                if not entries:error('state_closure',f"{c['id']}: no recorded prior state to return to")
+                for start in starts:
+                    for target in entries:expected.add((start,target,c['id']))
+                continue
             for start in starts:
                 target=start if c['transition']['to']=='same' else c['transition']['to']
                 expected.add((start,target,c['id']))
@@ -325,7 +393,18 @@ def evaluate(condition, facts):
     """Return True/False/UNKNOWN. Missing or incomparable input never means pass."""
     if 'literal' in condition:return condition['literal']
     if 'concept' in condition:return facts.get(condition['concept'],{}).get(condition['attribute'],UNKNOWN)
-    op=condition['op']; values=[evaluate(a,facts) for a in condition['args']]
+    op=condition['op']
+    if op in {'exists','each'}:
+        concept=condition['bind']['concept']; items=facts.get(concept,UNKNOWN)
+        if items is UNKNOWN:return UNKNOWN
+        if not isinstance(items,list):raise ValueError(f'Quantified facts for {concept} must be a list')
+        values=[evaluate(condition['args'][0],{**facts,concept:item}) for item in items]
+        if op=='exists':
+            if any(v is True for v in values):return True
+            return UNKNOWN if any(v is UNKNOWN for v in values) else False
+        if any(v is False for v in values):return False
+        return UNKNOWN if any(v is UNKNOWN for v in values) else True
+    values=[evaluate(a,facts) for a in condition['args']]
     if op=='all':
         if any(v is False for v in values):return False
         return UNKNOWN if any(v is UNKNOWN for v in values) else all(values)

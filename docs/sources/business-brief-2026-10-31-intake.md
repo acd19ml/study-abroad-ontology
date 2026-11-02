@@ -111,7 +111,6 @@ Agent 已依据上述方式更新[客户资料收集与背景挖掘方案](../di
 
 - `rule.ps.confirm_current_chinese`
 - `rule.ps.confirmed_chinese_before_english`
-- `rule.ps.confirmed_fact_has_evidence`
 - `rule.ps.english_matches_chinese`
 - `rule.ps.proposed_details_need_verification`
 <!-- MODEL-REFS:END -->

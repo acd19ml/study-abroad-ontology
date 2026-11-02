@@ -162,9 +162,104 @@ class ModelContractTests(unittest.TestCase):
 
     def test_incomparable_length_is_unknown_not_compliant(self):
         rule=self.index['rule.ps.ps_length_limit']
-        facts={'obj.ps.requirement':{'kind':'ps_length','finding':'known','value':500,'unit':'words'},
-               'obj.ps.check_report':{'measured_length':None,'length_unit':'words'}}
+        facts={'obj.ps.requirement':[{'kind':'ps_length','finding':'known','value':500,'unit':'words'}],
+               'obj.ps.check_report':{'known_requirements_passed':True,'measured_length':None,'length_unit':'words'}}
         self.assertIs(checks.evaluate(rule['condition'],facts),checks.UNKNOWN)
+
+    def test_unbound_concept_is_rejected(self):
+        docs=self.altered()
+        del self.element(docs,'rule.ps.confirm_current_chinese')['bindings']
+        self.assertRejected(docs,'concept_references')
+
+    def test_binding_path_must_start_from_bound_object(self):
+        docs=self.altered()
+        self.element(docs,'rule.ps.unknown_requirement')['condition']['bind']['via']=['rel.ps.knowledge_requirements']
+        self.assertRejected(docs,'concept_references')
+
+    def test_collection_cannot_be_bound_as_single_record(self):
+        docs=self.altered()
+        rule=self.element(docs,'rule.ps.final_known_requirements')
+        rule['bindings']=[{'concept':'obj.ps.check_report','via':['rel.ps.task_checks']}]
+        rule['condition']=rule['condition']['args'][0]
+        self.assertRejected(docs,'concept_references')
+
+    def test_quantifier_requires_bind(self):
+        docs=self.altered()
+        del self.element(docs,'rule.ps.official_source')['condition']['bind']
+        self.assertRejected(docs,'concept_references')
+
+    def test_escalation_cannot_target_human_executed_command(self):
+        docs=self.altered()
+        rule=self.element(docs,'rule.ps.unknown_requirements_human_review')
+        rule['applies_to']=['cmd.ps.confirm_final']
+        rule['bindings']=[{'concept':'obj.ps.check_report','via':['rel.ps.task_checks']}]
+        self.assertRejected(docs,'rule_completeness')
+
+    def test_quantified_facts_must_be_a_list(self):
+        rule=self.index['rule.ps.official_source']
+        with self.assertRaises(ValueError):
+            checks.evaluate(rule['condition'],{'obj.ps.requirement':{'source_kind':'official_website'}})
+
+    def test_requirement_records_keep_their_own_source(self):
+        names=lambda id:{a['name'] for a in self.index[id]['attributes']}
+        self.assertIn('source_kind',names('obj.ps.requirement'))
+        self.assertNotIn('source_kind',names('obj.ps.program_knowledge'))
+
+    def test_consultant_records_without_required_evidence(self):
+        for oid,attr in [('obj.ps.background_fact','verification_ref'),('obj.ps.continuation_decision','customer_evidence_ref')]:
+            self.assertTrue(next(a for a in self.index[oid]['attributes'] if a['name']==attr)['nullable'])
+        required=[e['id'] for e in self.index.values() if e['type']=='rule' and any(
+            t.get('attribute') in {'verification_ref','customer_evidence_ref','evidence_ref'} for t in checks.terms(e['condition']))]
+        self.assertEqual(required,[])
+
+    def commands_on(self,root):
+        return [e for e in self.index.values() if e['type']=='command' and e['root']==root]
+
+    def transitions(self,command):
+        return {(t['from'],t['to']) for t in self.index['obj.ps.task']['lifecycle']['transitions'] if t['by']==command}
+
+    def test_withdrawn_task_only_records_reminders_and_human_actions(self):
+        ai=[c['id'] for c in self.commands_on('obj.ps.task') if c['role']=='role.ps.agent' and 'withdrawn' in c['allowed_in']]
+        self.assertEqual(ai,['cmd.ps.record_change_impact'])
+
+    def test_restore_returns_to_any_state_before_withdrawal(self):
+        before=set(self.index['cmd.ps.record_withdrawal']['allowed_in'])
+        self.assertEqual({t for f,t in self.transitions('cmd.ps.restore_application')},before)
+
+    def test_submitted_is_terminal_and_stops_reminders(self):
+        self.assertFalse([t for t in self.index['obj.ps.task']['lifecycle']['transitions'] if t['from']=='submitted'])
+        allowed=self.index['cmd.ps.record_change_impact']['allowed_in']
+        self.assertNotIn('submitted',allowed)
+        self.assertIn('consultant_confirmed',allowed);self.assertIn('withdrawn',allowed)
+        self.assertEqual(self.index['cmd.ps.record_submission']['allowed_in'],['consultant_confirmed'])
+
+    def test_english_wording_revision_stays_on_confirmed_chinese(self):
+        self.assertEqual(self.transitions('cmd.ps.revise_english_wording'),
+                         {(s,'english_prepared') for s in ['english_prepared','checked','consultant_confirmed']})
+        self.assertIn('cmd.ps.check_english',self.index['rule.ps.english_matches_chinese']['applies_to'])
+
+    def test_direction_drafts_belong_to_student_not_project_task(self):
+        self.assertEqual(self.index['obj.ps.direction_draft']['aggregate'],'agg.ps.student_context')
+        attributes={a['name']:a for a in self.index['obj.ps.draft']['attributes']}
+        self.assertNotIn('purpose',attributes);self.assertFalse(attributes['program_ref']['nullable'])
+
+    def test_every_change_source_reminds_unsubmitted_tasks(self):
+        policies=[e for e in self.index.values() if e['type']=='policy']
+        reminders={p['on'] for p in policies if p['then']=='cmd.ps.record_change_impact'}
+        self.assertEqual(reminders,{'evt.ps.official_knowledge_refreshed','evt.ps.portal_feedback_recorded','evt.ps.student_context_refreshed'})
+        sync=[p for p in policies if 'schedule' in p]
+        self.assertEqual([p['then'] for p in sync],['cmd.ps.refresh_official_knowledge'])
+        self.assertEqual(self.index['cmd.ps.refresh_official_knowledge']['execution_level'],'自动执行')
+
+    def test_policy_needs_exactly_one_trigger(self):
+        docs=self.altered()
+        self.element(docs,'pol.ps.monthly_official_sync')['on']='evt.ps.student_context_refreshed'
+        self.assertRejected(docs,'references')
+
+    def test_student_confirmation_is_recorded_by_consultant(self):
+        self.assertEqual(self.index['cmd.ps.confirm_chinese']['role'],'role.ps.consultant')
+        evidence=next(a for a in self.index['obj.ps.confirmation']['attributes'] if a['name']=='evidence_ref')
+        self.assertTrue(evidence['nullable'])
 
 
 if __name__=='__main__':unittest.main()

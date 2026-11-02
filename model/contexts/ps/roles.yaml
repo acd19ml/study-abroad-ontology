@@ -9,6 +9,8 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   kind: human
@@ -17,10 +19,15 @@ elements:
   - cmd.ps.confirm_final
   - cmd.ps.revise_chinese
   - cmd.ps.resolve_issue
+  - cmd.ps.confirm_chinese
   - cmd.ps.record_continuation
   - cmd.ps.record_student_context
   - cmd.ps.refresh_student_context
   - cmd.ps.record_portal_feedback
+  - cmd.ps.revise_english_wording
+  - cmd.ps.record_withdrawal
+  - cmd.ps.restore_application
+  - cmd.ps.record_submission
 - id: role.ps.student
   type: role
   name: 学生
@@ -29,11 +36,11 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/model-review-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   kind: human
-  commands:
-  - cmd.ps.confirm_chinese
+  commands: []
 - id: role.ps.agent
   type: role
   name: 业务 AI
@@ -42,6 +49,7 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   kind: agent
@@ -53,3 +61,5 @@ elements:
   - cmd.ps.record_issue
   - cmd.ps.record_official_knowledge
   - cmd.ps.refresh_official_knowledge
+  - cmd.ps.record_eligibility
+  - cmd.ps.record_change_impact

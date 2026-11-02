@@ -9,6 +9,8 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.task
@@ -65,14 +67,10 @@ elements:
     - unknown
     - met
     - unmet
-  - name: continuation_decision
-    type: enum
-    meaning: 顾问与客户的申请选择，与达标事实分开
-    nullable: false
-    values:
-    - undecided
-    - continue
-    - withdraw
+  - name: state_before_withdrawal
+    type: string
+    meaning: 客户放弃申请前所处的任务状态；恢复申请时回到该状态
+    nullable: true
   lifecycle:
     initial: requested
     states:
@@ -83,6 +81,8 @@ elements:
     - english_prepared
     - checked
     - consultant_confirmed
+    - withdrawn
+    - submitted
     transitions:
     - from: null
       to: requested
@@ -91,6 +91,9 @@ elements:
       to: context_ready
       by: cmd.ps.assemble_context
     - from: context_ready
+      to: context_ready
+      by: cmd.ps.assemble_context
+    - from: chinese_prepared
       to: context_ready
       by: cmd.ps.assemble_context
     - from: context_ready
@@ -171,6 +174,9 @@ elements:
     - from: consultant_confirmed
       to: consultant_confirmed
       by: cmd.ps.resolve_issue
+    - from: withdrawn
+      to: withdrawn
+      by: cmd.ps.resolve_issue
     - from: requested
       to: requested
       by: cmd.ps.record_continuation
@@ -192,6 +198,105 @@ elements:
     - from: consultant_confirmed
       to: consultant_confirmed
       by: cmd.ps.record_continuation
+    - from: english_prepared
+      to: english_prepared
+      by: cmd.ps.revise_english_wording
+    - from: checked
+      to: english_prepared
+      by: cmd.ps.revise_english_wording
+    - from: consultant_confirmed
+      to: english_prepared
+      by: cmd.ps.revise_english_wording
+    - from: requested
+      to: requested
+      by: cmd.ps.record_eligibility
+    - from: context_ready
+      to: context_ready
+      by: cmd.ps.record_eligibility
+    - from: chinese_prepared
+      to: chinese_prepared
+      by: cmd.ps.record_eligibility
+    - from: chinese_confirmed
+      to: chinese_confirmed
+      by: cmd.ps.record_eligibility
+    - from: english_prepared
+      to: english_prepared
+      by: cmd.ps.record_eligibility
+    - from: checked
+      to: checked
+      by: cmd.ps.record_eligibility
+    - from: consultant_confirmed
+      to: consultant_confirmed
+      by: cmd.ps.record_eligibility
+    - from: requested
+      to: requested
+      by: cmd.ps.record_change_impact
+    - from: context_ready
+      to: context_ready
+      by: cmd.ps.record_change_impact
+    - from: chinese_prepared
+      to: chinese_prepared
+      by: cmd.ps.record_change_impact
+    - from: chinese_confirmed
+      to: chinese_confirmed
+      by: cmd.ps.record_change_impact
+    - from: english_prepared
+      to: english_prepared
+      by: cmd.ps.record_change_impact
+    - from: checked
+      to: checked
+      by: cmd.ps.record_change_impact
+    - from: consultant_confirmed
+      to: consultant_confirmed
+      by: cmd.ps.record_change_impact
+    - from: withdrawn
+      to: withdrawn
+      by: cmd.ps.record_change_impact
+    - from: requested
+      to: withdrawn
+      by: cmd.ps.record_withdrawal
+    - from: context_ready
+      to: withdrawn
+      by: cmd.ps.record_withdrawal
+    - from: chinese_prepared
+      to: withdrawn
+      by: cmd.ps.record_withdrawal
+    - from: chinese_confirmed
+      to: withdrawn
+      by: cmd.ps.record_withdrawal
+    - from: english_prepared
+      to: withdrawn
+      by: cmd.ps.record_withdrawal
+    - from: checked
+      to: withdrawn
+      by: cmd.ps.record_withdrawal
+    - from: consultant_confirmed
+      to: withdrawn
+      by: cmd.ps.record_withdrawal
+    - from: withdrawn
+      to: requested
+      by: cmd.ps.restore_application
+    - from: withdrawn
+      to: context_ready
+      by: cmd.ps.restore_application
+    - from: withdrawn
+      to: chinese_prepared
+      by: cmd.ps.restore_application
+    - from: withdrawn
+      to: chinese_confirmed
+      by: cmd.ps.restore_application
+    - from: withdrawn
+      to: english_prepared
+      by: cmd.ps.restore_application
+    - from: withdrawn
+      to: checked
+      by: cmd.ps.restore_application
+    - from: withdrawn
+      to: consultant_confirmed
+      by: cmd.ps.restore_application
+    - from: consultant_confirmed
+      to: submitted
+      by: cmd.ps.record_submission
     labels:
     - value: requested
       name: 已发起
@@ -207,14 +312,20 @@ elements:
       name: 英文已检查
     - value: consultant_confirmed
       name: 顾问已确认
+    - value: withdrawn
+      name: 客户已放弃
+    - value: submitted
+      name: 已递交
 - id: obj.ps.draft
   type: object
-  name: PS 稿件版本
+  name: 项目 PS 稿件版本
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.task
@@ -229,15 +340,8 @@ elements:
     nullable: false
   - name: program_ref
     type: identifier
-    meaning: 项目稿对应的项目；通用稿可空
-    nullable: true
-  - name: purpose
-    type: enum
-    meaning: 稿件用途
+    meaning: 稿件对应的目标项目
     nullable: false
-    values:
-    - direction_generic
-    - project
   - name: language
     type: enum
     meaning: 稿件语言
@@ -257,6 +361,14 @@ elements:
     type: identifier
     meaning: 对应中文或前版标识
     nullable: true
+  - name: context_packet_ref
+    type: identifier
+    meaning: 起草所依据的任务上下文；英文稿沿用其中文稿的上下文
+    nullable: true
+  - name: final_confirmed
+    type: boolean
+    meaning: 是否为所属任务当前的顾问最终定稿，即不再修改的英文稿；只有定稿可作为其他项目的已审核 PS 参考
+    nullable: false
   lifecycle: null
 - id: obj.ps.confirmation
   type: object
@@ -266,6 +378,8 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.task
@@ -283,7 +397,7 @@ elements:
     - consultant_final
   - name: actor_ref
     type: identifier
-    meaning: 作出确认的学生或顾问
+    meaning: 作出确认决定的学生或顾问；学生的中文确认由顾问代为录入
     nullable: false
   - name: decision
     type: boolean
@@ -291,8 +405,8 @@ elements:
     nullable: false
   - name: evidence_ref
     type: uri
-    meaning: 微信等确认依据位置
-    nullable: false
+    meaning: 微信等确认依据位置；顾问录入时不要求附
+    nullable: true
   lifecycle: null
 - id: obj.ps.context_packet
   type: object
@@ -336,7 +450,7 @@ elements:
     nullable: false
   - name: generic_draft_refs
     type: identifier_list
-    meaning: 已有方向初稿引用，可为空
+    meaning: 学生已有方向初稿的引用，可为空
     nullable: false
   - name: requirement_refs
     type: identifier_list
@@ -412,19 +526,21 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.task
   attributes:
   - name: kind
     type: enum
-    meaning: 缺口或差异种类
+    meaning: 缺口、差异或资料变化提醒的种类
     nullable: false
     values:
     - missing_requirement
     - conflicting_background
     - unverified_detail
     - scope_decision
+    - context_changed
   - name: original_refs
     type: string_list
     meaning: 原话或原资料位置
@@ -444,34 +560,58 @@ elements:
   lifecycle: null
 - id: obj.ps.continuation_decision
   type: object
-  name: 未达标项目人工选择
+  name: 未达标仍继续申请的记录
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.task
   attributes:
   - name: reason
     type: string
-    meaning: 未达标原因
+    meaning: 未达官网最低条件的原因
     nullable: false
-  - name: choice
-    type: enum
-    meaning: 最终申请选择
-    nullable: false
-    values:
-    - continue
-    - withdraw
   - name: customer_evidence_ref
     type: uri
-    meaning: 客户明确选择的沟通记录
-    nullable: false
+    meaning: 客户选择的沟通记录位置，可选；顾问录入时不要求附
+    nullable: true
   - name: consultant_ref
     type: identifier
     meaning: 记录与协商的顾问
+    nullable: false
+  lifecycle: null
+- id: obj.ps.selection_rationale
+  type: object
+  name: 选材理由
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  attributes:
+  - name: draft_version
+    type: identifier
+    meaning: 对应的中文稿版本
+    nullable: false
+  - name: fact_ref
+    type: identifier
+    meaning: 选用的经历事实
+    nullable: false
+  - name: program_feature_refs
+    type: identifier_list
+    meaning: 对应的项目课程或要求
+    nullable: false
+  - name: rationale
+    type: string
+    meaning: 选用理由；属于 AI 分析，不是学生已确认的事实
     nullable: false
   lifecycle: null
 - id: obj.ps.student_context
@@ -573,6 +713,8 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.student_context
@@ -599,7 +741,7 @@ elements:
     nullable: false
   - name: verification_ref
     type: uri
-    meaning: 核对依据，未核对可空
+    meaning: 核对依据位置，可选；顾问录入核对结果时不要求附
     nullable: true
   - name: source_refs
     type: string_list
@@ -635,6 +777,46 @@ elements:
     meaning: 可支持或说明的经历
     nullable: false
   lifecycle: null
+- id: obj.ps.direction_draft
+  type: object
+  name: 方向初稿
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.student_context
+  attributes:
+  - name: version_id
+    type: identifier
+    meaning: 方向初稿版本标识
+    nullable: false
+  - name: student_ref
+    type: identifier
+    meaning: 初稿属于的学生
+    nullable: false
+  - name: direction
+    type: string
+    meaning: 申请方向
+    nullable: false
+  - name: language
+    type: enum
+    meaning: 稿件语言
+    nullable: false
+    values:
+    - zh
+    - en
+  - name: content_ref
+    type: uri
+    meaning: 稿件正文位置
+    nullable: false
+  - name: fact_refs
+    type: identifier_list
+    meaning: 引用的经历事实
+    nullable: false
+  lifecycle: null
 - id: obj.ps.program_knowledge
   type: object
   name: 项目知识记录
@@ -643,6 +825,7 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.program_knowledge
@@ -663,16 +846,9 @@ elements:
     type: boolean
     meaning: 本版是否已结构化入库
     nullable: false
-  - name: source_kind
-    type: enum
-    meaning: 本次来源类别
-    nullable: false
-    values:
-    - official_website
-    - consultant_portal_feedback
   - name: source_refs
     type: string_list
-    meaning: 官网或顾问反馈出处
+    meaning: 本知识记录用到的官网或顾问反馈出处
     nullable: false
   lifecycle:
     initial: recorded
@@ -757,6 +933,7 @@ elements:
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: confirmed_business
   aggregate: agg.ps.program_knowledge
@@ -787,6 +964,13 @@ elements:
     - known
     - not_found
     - explicitly_unrestricted
+  - name: source_kind
+    type: enum
+    meaning: 该条要求的来源类别；官网要求与顾问网申反馈分别成条保留
+    nullable: false
+    values:
+    - official_website
+    - consultant_portal_feedback
   - name: value
     type: scalar
     meaning: 已查明的要求值；未知或明确无限制时可空
@@ -798,6 +982,47 @@ elements:
   - name: source_ref
     type: uri
     meaning: 要求原文出处，没找到时记录查找说明位置
+    nullable: false
+  lifecycle: null
+- id: obj.ps.knowledge_change
+  type: object
+  name: 项目知识差异记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  aggregate: agg.ps.program_knowledge
+  attributes:
+  - name: from_revision
+    type: string
+    meaning: 变化前的知识版本
+    nullable: false
+  - name: to_revision
+    type: string
+    meaning: 变化后的知识版本
+    nullable: false
+  - name: changed_refs
+    type: identifier_list
+    meaning: 发生变化的要求或课程
+    nullable: false
+  - name: summary
+    type: string
+    meaning: 差异说明
+    nullable: false
+  - name: source_kind
+    type: enum
+    meaning: 差异来源
+    nullable: false
+    values:
+    - official_website
+    - consultant_portal_feedback
+  - name: source_refs
+    type: string_list
+    meaning: 官网或顾问反馈出处
     nullable: false
   lifecycle: null
 - id: rel.ps.task_drafts
@@ -832,7 +1057,7 @@ elements:
   from: obj.ps.task
 - id: rel.ps.task_packet
   type: relation
-  name: 任务包含上下文依据
+  name: 任务当前上下文依据
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
@@ -844,6 +1069,21 @@ elements:
   kind: composition
   cardinality: 0..1
   semantic: task_packet
+  from: obj.ps.task
+- id: rel.ps.task_packet_history
+  type: relation
+  name: 任务保留历次上下文依据
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.context_packet
+  kind: composition
+  cardinality: 0..*
+  semantic: task_packet_history
   from: obj.ps.task
 - id: rel.ps.task_checks
   type: relation
@@ -890,6 +1130,21 @@ elements:
   cardinality: 0..*
   semantic: task_decisions
   from: obj.ps.task
+- id: rel.ps.task_rationales
+  type: relation
+  name: 任务包含选材理由
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.selection_rationale
+  kind: composition
+  cardinality: 0..*
+  semantic: task_rationales
+  from: obj.ps.task
 - id: rel.ps.student_applicant
   type: relation
   name: 学生读视图包含基础背景
@@ -935,6 +1190,21 @@ elements:
   cardinality: 0..*
   semantic: student_materials
   from: obj.ps.student_context
+- id: rel.ps.student_direction_drafts
+  type: relation
+  name: 学生读视图包含方向初稿
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.direction_draft
+  kind: composition
+  cardinality: 0..*
+  semantic: student_direction_drafts
+  from: obj.ps.student_context
 - id: rel.ps.knowledge_program
   type: relation
   name: 项目知识包含项目资料
@@ -979,6 +1249,21 @@ elements:
   kind: composition
   cardinality: 0..*
   semantic: knowledge_requirements
+  from: obj.ps.program_knowledge
+- id: rel.ps.knowledge_changes
+  type: relation
+  name: 项目知识包含差异记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  to: obj.ps.knowledge_change
+  kind: composition
+  cardinality: 0..*
+  semantic: knowledge_changes
   from: obj.ps.program_knowledge
 - id: rel.ps.task_student
   type: relation
@@ -1085,6 +1370,21 @@ elements:
   cardinality: 0..*
   semantic: packet_requirements
   from: obj.ps.context_packet
+- id: rel.ps.packet_generic_drafts
+  type: relation
+  name: 上下文取得同一学生方向初稿
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.direction_draft
+  kind: association
+  cardinality: 0..*
+  semantic: packet_generic_drafts
+  from: obj.ps.context_packet
 - id: rel.ps.draft_facts
   type: relation
   name: 稿件引用背景事实
@@ -1100,6 +1400,96 @@ elements:
   cardinality: 0..*
   semantic: draft_facts
   from: obj.ps.draft
+- id: rel.ps.draft_packet
+  type: relation
+  name: 稿件依据的上下文
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.context_packet
+  kind: reference
+  cardinality: 0..1
+  semantic: draft_packet
+  from: obj.ps.draft
+- id: rel.ps.draft_rationales
+  type: relation
+  name: 稿件的选材理由
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.selection_rationale
+  kind: association
+  cardinality: 0..*
+  semantic: draft_rationales
+  from: obj.ps.draft
+- id: rel.ps.rationale_fact
+  type: relation
+  name: 理由对应的经历事实
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.background_fact
+  kind: association
+  cardinality: '1'
+  semantic: rationale_fact
+  from: obj.ps.selection_rationale
+- id: rel.ps.rationale_courses
+  type: relation
+  name: 理由对应的项目课程
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.course
+  kind: association
+  cardinality: 0..*
+  semantic: rationale_courses
+  from: obj.ps.selection_rationale
+- id: rel.ps.rationale_requirements
+  type: relation
+  name: 理由对应的项目要求
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.requirement
+  kind: association
+  cardinality: 0..*
+  semantic: rationale_requirements
+  from: obj.ps.selection_rationale
+- id: rel.ps.direction_draft_facts
+  type: relation
+  name: 方向初稿引用背景事实
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  to: obj.ps.background_fact
+  kind: association
+  cardinality: 0..*
+  semantic: direction_draft_facts
+  from: obj.ps.direction_draft
 - id: rel.ps.confirmation_version
   type: relation
   name: 内容确认指向实际稿件版本

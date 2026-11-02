@@ -1,3 +1,63 @@
 # 模型源；首次结构化表达为待评审草案。原文与理由通过 refs 关联。
 model_version: 0.1.0-draft
-elements: []
+elements:
+- id: pol.ps.monthly_official_sync
+  type: policy
+  name: 每月同步官网项目知识
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  schedule: 每月一次
+  then: cmd.ps.refresh_official_knowledge
+  target_scope: 知识库中全部项目的每个申请季
+  deadline: 每月一次；具体执行日未约定
+- id: pol.ps.official_change_reminder
+  type: policy
+  name: 官网差异提醒受影响任务
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  'on': evt.ps.official_knowledge_refreshed
+  then: cmd.ps.record_change_impact
+  target_scope: 该项目与申请季下未递交的任务，含已最终确认、客户已放弃的任务；仅当本次记录了差异
+  deadline: 未约定；只要求在未递交前提醒
+- id: pol.ps.portal_change_reminder
+  type: policy
+  name: 网申差异提醒受影响任务
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  'on': evt.ps.portal_feedback_recorded
+  then: cmd.ps.record_change_impact
+  target_scope: 该项目与申请季下未递交的任务，含已最终确认、客户已放弃的任务
+  deadline: 未约定；只要求在未递交前提醒
+- id: pol.ps.student_change_reminder
+  type: policy
+  name: 学生背景变化提醒受影响任务
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  'on': evt.ps.student_context_refreshed
+  then: cmd.ps.record_change_impact
+  target_scope: 该学生未递交的任务，含已最终确认、客户已放弃的任务
+  deadline: 未约定；只要求在未递交前提醒

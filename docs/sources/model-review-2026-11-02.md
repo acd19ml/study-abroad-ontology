@@ -1,0 +1,82 @@
+# 模型源 v0.1 评审答复记录
+
+- 日期：2026-11-02（Asia/Shanghai）。
+- 背景：Agent 对[模型源 v0.1 草案](../../model/README.md)做整体评审，提出 4 项须先修的问题、5 项业务表达缺口及 4 个须业务方决定的问题。本记录保存用户对后者的答复；修订内容见[模型变更提案](../proposals/ps-model-change-2026-11-02.md)。
+
+## 用户原话
+
+1. “实际是学生在微信里确认、顾问录入。从前端交互的角度来看，顾问操作该系统不需要附学生依据。”
+2. “我没理解任务撤回/关闭，从申请的角度只有在递交申请之前的任意时间/进度节点客户表示不用申请该项目。”
+3. “什么是官网知识库，如果指的是从官网获取的信息保存到本地知识库，这一动作需要每个月跑一次定时任务来同步差异并记录，不过要区分不同申请季。”
+4. “最终确认能否越过已知要求 这个你说的过于模糊我不知道你在说什么。”
+5. “先修第 1 到第 4 项，并为每项补一个能证明它被拦住的假设场景；再把第 5 到第 9 项写成模型变更提案的条目；完成这些之后，再拿去做整体业务评审。”
+
+## 已确认的事实
+
+- **学生中文确认的录入**：学生在微信中确认，系统中由顾问录入；顾问录入时不要求附学生确认依据。已同步：`cmd.ps.confirm_chinese` 的执行角色改为顾问，`obj.ps.confirmation.evidence_ref` 改为可空。
+- **客户放弃申请**：递交申请前的任意时间或进度节点，客户都可能表示不再申请该项目。这不同于未达官网最低条件时的继续或放弃选择。模型表达作为提案条目，尚未合入。
+- **官网信息同步**：从学校官网取得的项目信息保存到本地知识库后，每月运行一次定时任务，同步差异并记录，按申请季区分。模型表达作为提案条目，尚未合入。
+
+## 第二轮答复（Q-074 至 Q-077）
+
+用户原话：“应该被拦住、必须先改稿。 一样处理。不用记录原因，恢复原任务。同步库里全部项目，差异直接生效不过要记录差异变化，差异与学生正在准备申请的项目相关要提醒我。”
+
+- **Q-077**：AI 检查发现稿件不符合已查明的要求（例如超出字数限制）时，顾问最终确认应被拦住，必须先改稿。模型维持 `rule.ps.final_known_requirements`。
+- **Q-074**：顾问标记经历已核对、记录客户是否继续申请，与中文确认一样处理，不要求附依据。已删除两条 Agent 提出的依据规则，相应依据字段改为选填。
+- **Q-075**：客户放弃申请不用记录原因；之后客户又想申请时，恢复原任务。
+- **Q-076**：每月同步库里全部项目；差异直接生效，但要记录差异变化；差异与学生正在准备申请的项目相关时，提醒顾问。
+
+## 第三轮答复（提案第 5、7、11 项）
+
+用户原话：“我和客户会不断的进行稿件交付和反馈，中间会有很多版本，那么最终定稿的英文稿件即不需要再修改。学生补充或更正背景 也是我来提交，该系统目前不需要客户操作，仅由我“顾问”个人使用。 只要没递交，发生的变化都需要提醒。”
+
+- **已审核 PS 的含义**：与客户反复交付、反馈后，最终定稿、不需要再修改的英文稿，就是可供其他项目参考的已审核 PS；不另设客户认可步骤。模型中对应顾问最终确认的英文版本。
+- **系统使用者**：系统目前只由顾问个人使用，客户不操作；学生补充或更正背景也由顾问提交。
+- **变化提醒范围**：只要还没递交，学生背景和项目要求发生的变化都需要提醒顾问，包括已最终确认的稿件。
+- **Agent 待澄清**：系统如何知道已递交，以及客户对英文措辞的反馈能否直接改英文，见 [Q-078、Q-079](../scenarios/first-scenario/questions.md)。
+
+## 第四轮答复（Q-078、Q-079 及提案合入）
+
+用户原话：“按你的建议处理，改进模型”。
+
+- **Q-078**：顾问手动递交后，在系统中记录“已递交”；记录后不再提醒变化，也不再修改该项目稿件。系统不操作网申。
+- **Q-079**：客户只对英文措辞提意见时，可以直接出新的英文版本并重新检查；涉及经历内容的修改仍回到中文。是否涉及经历由顾问判断。
+- **提案合入**：用户同意将[模型变更提案](../proposals/ps-model-change-2026-11-02.md)第 5 至第 11 项改入模型源。
+
+<!-- MODEL-REFS:START -->
+## 模型关联索引
+
+此段由 `tools/checks/sync_model_refs.py` 根据模型源的 `refs` 同步，仅用于双向定位。
+
+- `cmd.ps.confirm_chinese`
+- `cmd.ps.record_change_impact`
+- `cmd.ps.record_eligibility`
+- `cmd.ps.record_submission`
+- `cmd.ps.record_withdrawal`
+- `cmd.ps.refresh_official_knowledge`
+- `cmd.ps.refresh_student_context`
+- `cmd.ps.restore_application`
+- `cmd.ps.revise_english_wording`
+- `evt.ps.application_restored`
+- `evt.ps.application_withdrawn`
+- `evt.ps.change_impact_recorded`
+- `evt.ps.chinese_confirmed`
+- `evt.ps.eligibility_recorded`
+- `evt.ps.english_wording_revised`
+- `evt.ps.official_knowledge_refreshed`
+- `evt.ps.submission_recorded`
+- `hdp.ps.change_impact`
+- `obj.ps.background_fact`
+- `obj.ps.confirmation`
+- `obj.ps.continuation_decision`
+- `obj.ps.draft`
+- `obj.ps.knowledge_change`
+- `obj.ps.task`
+- `pol.ps.monthly_official_sync`
+- `pol.ps.official_change_reminder`
+- `pol.ps.portal_change_reminder`
+- `pol.ps.student_change_reminder`
+- `role.ps.consultant`
+- `role.ps.student`
+- `rule.ps.same_student_reference_ps`
+<!-- MODEL-REFS:END -->

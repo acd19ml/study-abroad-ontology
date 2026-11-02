@@ -58,6 +58,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.task
@@ -68,13 +69,15 @@ elements:
   allowed_in:
   - requested
   - context_ready
+  - chinese_prepared
   transition:
     to: context_ready
     creates: false
   emits:
   - evt.ps.context_assembled
   execution_level: 执行后复核
-  effects: []
+  effects:
+  - 新建上下文依据并设为当前；历次上下文保留，已起草的稿件仍指向其所用上下文
   preserves: []
 - id: evt.ps.context_assembled
   type: event
@@ -106,6 +109,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.task
@@ -123,7 +127,7 @@ elements:
   - evt.ps.chinese_prepared
   execution_level: 执行后复核
   effects:
-  - 记录当前中文版本；保留拟写细节的待核对含义
+  - 记录当前中文版本及其所依据的上下文；记录选材理由；保留拟写细节的待核对含义
   preserves: []
 - id: evt.ps.chinese_prepared
   type: event
@@ -148,18 +152,20 @@ elements:
     nullable: false
 - id: cmd.ps.confirm_chinese
   type: command
-  name: 学生确认中文内容
+  name: 录入学生对中文内容的确认
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.task
   root: obj.ps.task
-  role: role.ps.student
+  role: role.ps.consultant
   params:
   - target_version
   - confirmation_ref
@@ -172,17 +178,18 @@ elements:
   - evt.ps.chinese_confirmed
   execution_level: 仅人工
   effects:
-  - chinese_confirmed_version 指向实际确认的 current_chinese_version；保留确认记录
+  - 学生在微信中确认，顾问在系统中录入；chinese_confirmed_version 指向实际确认的 current_chinese_version，保留确认记录，不要求附学生确认依据
   preserves: []
 - id: evt.ps.chinese_confirmed
   type: event
-  name: 学生确认中文内容已记录
+  name: 学生中文确认已录入
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/sources/model-review-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   produced_by: cmd.ps.confirm_chinese
@@ -301,6 +308,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.task
@@ -318,7 +326,7 @@ elements:
   - evt.ps.final_confirmed
   execution_level: 仅人工
   effects:
-  - 记录 final_english_version 和本次确认依据；不改变学校要求、达标事实或递交状态
+  - 记录 final_english_version 并将该英文稿标为最终定稿，可作为同一学生其他项目的已审核 PS 参考；不改变学校要求、达标事实或递交状态
   preserves: []
 - id: evt.ps.final_confirmed
   type: event
@@ -350,6 +358,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.task
@@ -371,7 +380,7 @@ elements:
   - evt.ps.chinese_revised
   execution_level: 仅人工
   effects:
-  - 建立新的 current_chinese_version；当前任务的已确认中文、英文和检查指针置空，历史稿件及确认记录保留
+  - 建立新的 current_chinese_version；当前任务的已确认中文、英文、检查及最终确认指针置空，原定稿取消最终定稿标记；历史稿件及确认记录保留
   preserves: []
 - id: evt.ps.chinese_revised
   type: event
@@ -473,6 +482,7 @@ elements:
   - english_prepared
   - checked
   - consultant_confirmed
+  - withdrawn
   transition:
     to: same
     creates: false
@@ -504,13 +514,14 @@ elements:
     nullable: false
 - id: cmd.ps.record_continuation
   type: command
-  name: 记录未达标项目的人工选择
+  name: 记录未达标仍继续申请
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.task
@@ -534,12 +545,12 @@ elements:
   - evt.ps.continuation_recorded
   execution_level: 仅人工
   effects:
-  - 仅更新 continuation_decision；不改写 eligibility
+  - 记录顾问与客户决定未达标仍继续申请；不改写 eligibility。决定不申请时改用记录客户放弃申请
   preserves:
   - obj.ps.task.eligibility
 - id: evt.ps.continuation_recorded
   type: event
-  name: 记录未达标项目的人工选择已记录
+  name: 未达标仍继续申请已记录
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
@@ -558,6 +569,315 @@ elements:
     type: string
     meaning: 对应版本
     nullable: false
+- id: cmd.ps.revise_english_wording
+  type: command
+  name: 修订英文措辞
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params:
+  - new_english_version_ref
+  - reason
+  allowed_in:
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  transition:
+    to: english_prepared
+    creates: false
+  emits:
+  - evt.ps.english_wording_revised
+  execution_level: 仅人工
+  effects:
+  - 客户只对英文用词或语气提意见、不涉及经历内容时使用，是否涉及经历由顾问判断；新英文版本仍依据当前已确认中文；检查与最终确认指针置空，原定稿取消最终定稿标记；涉及经历的修改改走修订中文内容
+  preserves: []
+- id: evt.ps.english_wording_revised
+  type: event
+  name: 英文措辞修订已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  produced_by: cmd.ps.revise_english_wording
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_eligibility
+  type: command
+  name: 记录官网最低条件达标情况
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.agent
+  params:
+  - eligibility
+  - requirement_refs
+  allowed_in:
+  - requested
+  - context_ready
+  - chinese_prepared
+  - chinese_confirmed
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  transition:
+    to: same
+    creates: false
+  emits:
+  - evt.ps.eligibility_recorded
+  execution_level: 执行后复核
+  effects:
+  - 按已入库的官网最低申请条件对照学生背景记录达标情况；无法判断时保持未知
+  preserves: []
+- id: evt.ps.eligibility_recorded
+  type: event
+  name: 官网最低条件达标情况已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.record_eligibility
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_change_impact
+  type: command
+  name: 记录资料变化提醒
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.agent
+  params:
+  - issue_ref
+  - change_source_ref
+  allowed_in:
+  - requested
+  - context_ready
+  - chinese_prepared
+  - chinese_confirmed
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  - withdrawn
+  transition:
+    to: same
+    creates: false
+  emits:
+  - evt.ps.change_impact_recorded
+  execution_level: 自动执行
+  effects:
+  - 为受影响任务记录资料变化问题，提醒顾问评估是否需要修改；不自动重写稿件
+  preserves: []
+- id: evt.ps.change_impact_recorded
+  type: event
+  name: 资料变化提醒已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  produced_by: cmd.ps.record_change_impact
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_withdrawal
+  type: command
+  name: 记录客户放弃申请
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params: []
+  allowed_in:
+  - requested
+  - context_ready
+  - chinese_prepared
+  - chinese_confirmed
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  transition:
+    to: withdrawn
+    creates: false
+  emits:
+  - evt.ps.application_withdrawn
+  execution_level: 仅人工
+  effects:
+  - 记住放弃前所处的状态；不记录原因；AI 不再执行该任务的准备命令，稿件与记录保留，资料变化仍记录提醒
+  preserves: []
+- id: evt.ps.application_withdrawn
+  type: event
+  name: 客户放弃申请已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  produced_by: cmd.ps.record_withdrawal
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.restore_application
+  type: command
+  name: 恢复申请
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params: []
+  allowed_in:
+  - withdrawn
+  transition:
+    to: previous
+    creates: false
+  emits:
+  - evt.ps.application_restored
+  execution_level: 仅人工
+  effects:
+  - 回到 state_before_withdrawal 记录的状态继续；放弃期间记录的变化提醒保留待评估
+  preserves: []
+- id: evt.ps.application_restored
+  type: event
+  name: 恢复申请已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  produced_by: cmd.ps.restore_application
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_submission
+  type: command
+  name: 记录已递交
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params: []
+  allowed_in:
+  - consultant_confirmed
+  transition:
+    to: submitted
+    creates: false
+  emits:
+  - evt.ps.submission_recorded
+  execution_level: 仅人工
+  effects:
+  - 顾问手动递交后记录；此后不再提醒资料变化，也不再修改该项目稿件；系统不操作网申
+  preserves: []
+- id: evt.ps.submission_recorded
+  type: event
+  name: 已递交已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  produced_by: cmd.ps.record_submission
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
 - id: cmd.ps.record_student_context
   type: command
   name: 记录顾问提供的学生上下文快照
@@ -567,6 +887,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.student_context
@@ -576,6 +897,8 @@ elements:
   - student_ref
   - source_refs
   - revision
+  - fact_refs
+  - direction_draft_refs
   allowed_in: []
   transition:
     to: recorded
@@ -615,6 +938,8 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  - docs/sources/model-review-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.student_context
@@ -623,6 +948,8 @@ elements:
   params:
   - source_refs
   - revision
+  - fact_refs
+  - direction_draft_refs
   allowed_in:
   - recorded
   transition:
@@ -631,7 +958,8 @@ elements:
   emits:
   - evt.ps.student_context_refreshed
   execution_level: 仅人工
-  effects: []
+  effects:
+  - 顾问提交学生补充或更正的背景；保留旧版本，供变化提醒识别受影响任务
   preserves: []
 - id: evt.ps.student_context_refreshed
   type: event
@@ -642,6 +970,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   produced_by: cmd.ps.refresh_student_context
@@ -663,6 +992,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.program_knowledge
@@ -673,6 +1003,7 @@ elements:
   - application_season
   - source_refs
   - revision
+  - requirement_refs
   allowed_in: []
   transition:
     to: recorded
@@ -706,13 +1037,15 @@ elements:
     nullable: false
 - id: cmd.ps.refresh_official_knowledge
   type: command
-  name: 修订学校官方项目知识
+  name: 同步学校官方项目知识
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
+  - docs/sources/model-review-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.program_knowledge
@@ -721,6 +1054,8 @@ elements:
   params:
   - source_refs
   - revision
+  - requirement_refs
+  - change_ref
   allowed_in:
   - recorded
   transition:
@@ -728,19 +1063,21 @@ elements:
     creates: false
   emits:
   - evt.ps.official_knowledge_refreshed
-  execution_level: 执行后复核
+  execution_level: 自动执行
   effects:
-  - 保留来源及修订说明，不覆盖已有任务使用过的知识版本
+  - 每月定时同步时执行；差异直接生效并另存新版本，有差异时记录项目知识差异；旧版本保留，不覆盖已被任务使用的版本
   preserves: []
 - id: evt.ps.official_knowledge_refreshed
   type: event
-  name: 修订学校官方项目知识已记录
+  name: 学校官方项目知识已同步
   status: draft
   owner: role.ps.consultant
   since: 0.1.0-draft
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/sources/model-review-2026-11-02.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   produced_by: cmd.ps.refresh_official_knowledge
@@ -753,6 +1090,10 @@ elements:
     type: string
     meaning: 对应版本
     nullable: false
+  - name: change_ref
+    type: identifier
+    meaning: 本次差异记录；无差异时为空
+    nullable: true
 - id: cmd.ps.record_portal_feedback
   type: command
   name: 记录顾问手动网申发现的差异
@@ -762,6 +1103,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   aggregate: agg.ps.program_knowledge
@@ -770,6 +1112,8 @@ elements:
   params:
   - source_refs
   - revision
+  - requirement_refs
+  - change_ref
   allowed_in:
   - recorded
   transition:
@@ -779,7 +1123,7 @@ elements:
   - evt.ps.portal_feedback_recorded
   execution_level: 仅人工
   effects:
-  - 顾问反馈与官网原始出处分别保留；不授权 AI 操作网申系统
+  - 写入来源为顾问网申反馈的要求记录，与官网要求分别成条保留，并记录项目知识差异；不授权 AI 操作网申系统
   preserves: []
 - id: evt.ps.portal_feedback_recorded
   type: event
@@ -790,6 +1134,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   produced_by: cmd.ps.record_portal_feedback
@@ -802,6 +1147,10 @@ elements:
     type: string
     meaning: 对应版本
     nullable: false
+  - name: change_ref
+    type: identifier
+    meaning: 本次差异记录
+    nullable: true
 - id: agg.ps.task
   type: aggregate
   name: 项目 PS 任务聚合
@@ -811,6 +1160,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   root: obj.ps.task
@@ -821,6 +1171,7 @@ elements:
   - obj.ps.check_report
   - obj.ps.issue
   - obj.ps.continuation_decision
+  - obj.ps.selection_rationale
   invariants:
   - rule.ps.confirmed_chinese_before_english
   - rule.ps.english_matches_chinese
@@ -835,6 +1186,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   root: obj.ps.student_context
@@ -842,6 +1194,7 @@ elements:
   - obj.ps.applicant
   - obj.ps.background_fact
   - obj.ps.background_material
+  - obj.ps.direction_draft
   invariants: []
   extension_points: []
 - id: agg.ps.program_knowledge
@@ -853,6 +1206,7 @@ elements:
   refs:
   - docs/scenarios/first-scenario/discovery.md
   - docs/proposals/ps-model-v0.1.md
+  - docs/proposals/ps-model-change-2026-11-02.md
   context: ctx.ps.preparation
   basis: agent_proposal
   root: obj.ps.program_knowledge
@@ -860,5 +1214,6 @@ elements:
   - obj.ps.program
   - obj.ps.course
   - obj.ps.requirement
+  - obj.ps.knowledge_change
   invariants: []
   extension_points: []

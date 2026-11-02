@@ -11,7 +11,7 @@
 - [contexts/ps/aggregates.yaml](contexts/ps/aggregates.yaml)：聚合、命令、事件和不变量。
 - [contexts/ps/rules.yaml](contexts/ps/rules.yaml)：条件、约束强度、动作和人工决策点。
 - [contexts/ps/roles.yaml](contexts/ps/roles.yaml)：顾问、学生和业务 AI 的命令职责。
-- [contexts/ps/policies.yaml](contexts/ps/policies.yaml)：当前为空；仅确认变化影响范围，不擅自定义自动传播策略及期限。
+- [contexts/ps/policies.yaml](contexts/ps/policies.yaml)：每月同步官网项目知识，以及学生背景、官网和网申差异发生后提醒未递交任务；具体执行时限未约定。
 - [contexts/ps/mappings.yaml](contexts/ps/mappings.yaml)：当前为空；数据库表、接口等实现映射后置。
 
 后续模型变更直接修改这些源文件并校验。将来生成的 HTML、图谱、代码及规则投影不成为第二个修改入口。

@@ -123,7 +123,9 @@
                 "eq",
                 "ne",
                 "gt",
-                "is_null"
+                "is_null",
+                "exists",
+                "each"
               ]
             },
             "args": {
@@ -132,6 +134,9 @@
                 "$ref": "#/$defs/condition"
               },
               "minItems": 1
+            },
+            "bind": {
+              "$ref": "#/$defs/binding"
             }
           },
           "required": [
@@ -1116,6 +1121,13 @@
             "escalate",
             "flag"
           ]
+        },
+        "bindings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/binding"
+          },
+          "minItems": 1
         }
       },
       "required": [
@@ -1268,6 +1280,12 @@
         },
         "deadline": {
           "type": "string"
+        },
+        "schedule": {
+          "type": "string"
+        },
+        "target_scope": {
+          "type": "string"
         }
       },
       "required": [
@@ -1280,7 +1298,6 @@
         "refs",
         "context",
         "basis",
-        "on",
         "then",
         "deadline"
       ],
@@ -1450,6 +1467,39 @@
       ],
       "additionalProperties": false,
       "title": "实现映射"
+    },
+    "binding": {
+      "title": "规则对象绑定",
+      "type": "object",
+      "properties": {
+        "concept": {
+          "type": "string",
+          "pattern": "^(goal|metric|ctx|obj|rel|agg|cmd|evt|rule|pol|role|hdp|map)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+        },
+        "param": {
+          "type": "string"
+        },
+        "via": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(goal|metric|ctx|obj|rel|agg|cmd|evt|rule|pol|role|hdp|map)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+          },
+          "minItems": 1
+        },
+        "for": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(goal|metric|ctx|obj|rel|agg|cmd|evt|rule|pol|role|hdp|map)\\.[a-z0-9_]+\\.[a-z0-9_]+$"
+          },
+          "minItems": 1
+        }
+      },
+      "required": [
+        "concept"
+      ],
+      "additionalProperties": false
     }
   }
 }
