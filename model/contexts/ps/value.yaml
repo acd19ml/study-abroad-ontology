@@ -1,0 +1,46 @@
+# 模型源；首次结构化表达为待评审草案。原文与理由通过 refs 关联。
+model_version: 0.1.0-draft
+elements:
+- id: ctx.ps.preparation
+  type: context
+  name: 项目 PS 准备
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/stage-0-2026-11-02.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  scope: 为指定学生和项目主动取得上下文，准备中文稿、协调核对、生成英文、检查并交顾问确认；不含选校决策、网申递交或对外通信。
+- id: goal.ps.autonomous_context
+  type: goal
+  name: 依业务模型自主准备 PS 上下文
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/stage-0-2026-11-02.md
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  description: 顾问提供学生和目标项目后，AI 主动取得课程与要求、背景材料、同一学生其他项目已审核 PS 和业务规则，按确认边界准备与解释产出。
+- id: metric.ps.manual_context_categories
+  type: metric
+  name: 仍需顾问手动补齐的已有上下文类别数
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/stage-0-2026-11-02.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  definition: 一次项目 PS 任务中，AI 本可取得却仍要求顾问查找或拼接的上下文类别数；新事实、不可取得信息和客户意愿按人工问题处理。
+  measures: obj.ps.task
+  goal: goal.ps.autonomous_context
+  inputs:
+  - obj.ps.context_packet.manual_context_categories
+  baseline: null
+  target: 0
+  measurement_status: pending_business_review

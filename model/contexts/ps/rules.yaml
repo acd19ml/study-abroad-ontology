@@ -1,0 +1,628 @@
+# 模型源；首次结构化表达为待评审草案。原文与理由通过 refs 关联。
+model_version: 0.1.0-draft
+elements:
+- id: rule.ps.confirmed_chinese_before_english
+  type: rule
+  name: 当前中文版本须经学生确认再生成英文
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/business-brief-2026-10-31-intake.md
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.generate_english
+  condition:
+    op: any
+    args:
+    - op: is_null
+      args:
+      - concept: obj.ps.task
+        attribute: chinese_confirmed_version
+    - op: ne
+      args:
+      - concept: obj.ps.task
+        attribute: current_chinese_version
+      - concept: obj.ps.task
+        attribute: chinese_confirmed_version
+  action: deny
+- id: rule.ps.english_matches_chinese
+  type: rule
+  name: 英文依据必须对应当前已确认中文
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/business-brief-2026-10-31-intake.md
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.check_english
+  - cmd.ps.confirm_final
+  condition:
+    op: any
+    args:
+    - op: is_null
+      args:
+      - concept: obj.ps.task
+        attribute: english_based_on_chinese
+    - op: ne
+      args:
+      - concept: obj.ps.task
+        attribute: english_based_on_chinese
+      - concept: obj.ps.task
+        attribute: current_chinese_version
+    - op: ne
+      args:
+      - concept: obj.ps.task
+        attribute: chinese_confirmed_version
+      - concept: obj.ps.task
+        attribute: current_chinese_version
+  action: deny
+- id: rule.ps.current_version_checked
+  type: rule
+  name: 顾问最终确认必须对应本次已检查英文
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  strength: normative
+  applies_to:
+  - cmd.ps.confirm_final
+  condition:
+    op: any
+    args:
+    - op: is_null
+      args:
+      - concept: obj.ps.task
+        attribute: checked_english_version
+    - op: ne
+      args:
+      - concept: obj.ps.task
+        attribute: current_english_version
+      - concept: obj.ps.task
+        attribute: checked_english_version
+  action: deny
+- id: rule.ps.same_student_facts
+  type: rule
+  name: 其他学生的背景不得作为本学生经历
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.assemble_context
+  - cmd.ps.prepare_chinese
+  condition:
+    op: ne
+    args:
+    - concept: obj.ps.task
+      attribute: student_ref
+    - concept: obj.ps.background_fact
+      attribute: student_ref
+  action: deny
+- id: rule.ps.same_student_reference_ps
+  type: rule
+  name: 参考的已审核 PS 必须属于同一学生
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/stage-0-2026-11-02.md
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.assemble_context
+  condition:
+    op: ne
+    args:
+    - concept: obj.ps.task
+      attribute: student_ref
+    - concept: obj.ps.draft
+      attribute: student_ref
+  action: deny
+- id: rule.ps.confirm_current_chinese
+  type: rule
+  name: 学生确认覆盖本任务当前中文版本
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/business-brief-2026-10-31-intake.md
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.confirm_chinese
+  condition:
+    op: any
+    args:
+    - op: ne
+      args:
+      - concept: obj.ps.confirmation
+        attribute: target_version
+      - concept: obj.ps.task
+        attribute: current_chinese_version
+    - op: ne
+      args:
+      - concept: obj.ps.confirmation
+        attribute: actor_ref
+      - concept: obj.ps.task
+        attribute: student_ref
+    - op: ne
+      args:
+      - concept: obj.ps.confirmation
+        attribute: scope
+      - literal: chinese_content
+  action: deny
+- id: rule.ps.confirm_current_english
+  type: rule
+  name: 最终确认覆盖本任务当前英文版本
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  strength: normative
+  applies_to:
+  - cmd.ps.confirm_final
+  condition:
+    op: any
+    args:
+    - op: ne
+      args:
+      - concept: obj.ps.confirmation
+        attribute: target_version
+      - concept: obj.ps.task
+        attribute: current_english_version
+    - op: ne
+      args:
+      - concept: obj.ps.confirmation
+        attribute: scope
+      - literal: consultant_final
+  action: deny
+- id: rule.ps.proposed_details_need_verification
+  type: rule
+  name: 未核对的经历细节保留核对标记
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/business-brief-2026-10-31-intake.md
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.prepare_chinese
+  condition:
+    op: eq
+    args:
+    - concept: obj.ps.background_fact
+      attribute: confirmed
+    - literal: false
+  action: flag
+- id: rule.ps.confirmed_fact_has_evidence
+  type: rule
+  name: 记为已确认的经历保留明确核对依据
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/business-brief-2026-10-31-intake.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  strength: normative
+  applies_to:
+  - cmd.ps.record_student_context
+  - cmd.ps.refresh_student_context
+  condition:
+    op: all
+    args:
+    - op: eq
+      args:
+      - concept: obj.ps.background_fact
+        attribute: confirmed
+      - literal: true
+    - op: is_null
+      args:
+      - concept: obj.ps.background_fact
+        attribute: verification_ref
+  action: deny
+- id: rule.ps.knowledge_persisted_before_use
+  type: rule
+  name: 已取得的项目知识入库后使用
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.assemble_context
+  condition:
+    op: eq
+    args:
+    - concept: obj.ps.program_knowledge
+      attribute: persisted
+    - literal: false
+  action: deny
+- id: rule.ps.knowledge_scope_matches
+  type: rule
+  name: 所用知识须对应本任务项目及申请季
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/stage-0-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.assemble_context
+  condition:
+    op: any
+    args:
+    - op: ne
+      args:
+      - concept: obj.ps.task
+        attribute: program_ref
+      - concept: obj.ps.program_knowledge
+        attribute: program_ref
+    - op: ne
+      args:
+      - concept: obj.ps.task
+        attribute: application_season
+      - concept: obj.ps.program_knowledge
+        attribute: application_season
+  action: deny
+- id: rule.ps.official_source
+  type: rule
+  name: 学校官方知识记录来自学校官网
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  - docs/sources/stage-0-2026-11-02.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.record_official_knowledge
+  - cmd.ps.refresh_official_knowledge
+  condition:
+    op: ne
+    args:
+    - concept: obj.ps.program_knowledge
+      attribute: source_kind
+    - literal: official_website
+  action: deny
+- id: rule.ps.unknown_requirement
+  type: rule
+  name: 没找到要求时列具体问题并继续不受影响内容
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.assemble_context
+  - cmd.ps.prepare_chinese
+  - cmd.ps.check_english
+  condition:
+    op: eq
+    args:
+    - concept: obj.ps.requirement
+      attribute: finding
+    - literal: not_found
+  action: flag
+- id: rule.ps.unknown_is_not_unrestricted
+  type: rule
+  name: 没找到要求不得填入无限制值
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.record_official_knowledge
+  - cmd.ps.refresh_official_knowledge
+  condition:
+    op: all
+    args:
+    - op: eq
+      args:
+      - concept: obj.ps.requirement
+        attribute: finding
+      - literal: not_found
+    - op: not
+      args:
+      - op: is_null
+        args:
+        - concept: obj.ps.requirement
+          attribute: value
+  action: deny
+- id: rule.ps.final_known_requirements
+  type: rule
+  name: 已知要求未通过时最终稿需修改
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.confirm_final
+  condition:
+    op: eq
+    args:
+    - concept: obj.ps.check_report
+      attribute: known_requirements_passed
+    - literal: false
+  action: deny
+- id: rule.ps.unknown_requirements_human_review
+  type: rule
+  name: 未知要求交顾问判断且不改记为全部已验证
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.confirm_final
+  condition:
+    op: eq
+    args:
+    - concept: obj.ps.check_report
+      attribute: has_unknown_requirements
+    - literal: true
+  action: escalate
+- id: rule.ps.unmet_remains_unmet
+  type: rule
+  name: 未达标事实不因继续申请而改记达标
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.record_continuation
+  condition:
+    op: eq
+    args:
+    - concept: obj.ps.task
+      attribute: eligibility
+    - literal: unmet
+  action: flag
+- id: rule.ps.ps_length_limit
+  type: rule
+  name: 稿件长度符合本项目已查明的官方限制
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.check_english
+  - cmd.ps.confirm_final
+  condition:
+    op: all
+    args:
+    - op: eq
+      args:
+      - concept: obj.ps.requirement
+        attribute: kind
+      - literal: ps_length
+    - op: eq
+      args:
+      - concept: obj.ps.requirement
+        attribute: finding
+      - literal: known
+    - op: eq
+      args:
+      - concept: obj.ps.check_report
+        attribute: length_unit
+      - concept: obj.ps.requirement
+        attribute: unit
+    - op: gt
+      args:
+      - concept: obj.ps.check_report
+        attribute: measured_length
+      - concept: obj.ps.requirement
+        attribute: value
+  action: deny
+- id: rule.ps.length_measurement_unknown
+  type: rule
+  name: 已知长度要求缺测量值或单位不一致时交人工核对
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  strength: normative
+  applies_to:
+  - cmd.ps.check_english
+  - cmd.ps.confirm_final
+  condition:
+    op: all
+    args:
+    - op: eq
+      args:
+      - concept: obj.ps.requirement
+        attribute: kind
+      - literal: ps_length
+    - op: eq
+      args:
+      - concept: obj.ps.requirement
+        attribute: finding
+      - literal: known
+    - op: any
+      args:
+      - op: is_null
+        args:
+        - concept: obj.ps.check_report
+          attribute: measured_length
+      - op: is_null
+        args:
+        - concept: obj.ps.check_report
+          attribute: length_unit
+      - op: ne
+        args:
+        - concept: obj.ps.check_report
+          attribute: length_unit
+        - concept: obj.ps.requirement
+          attribute: unit
+  action: escalate
+- id: rule.ps.customer_choice_evidence
+  type: rule
+  name: 人工申请选择须有客户明确决定依据
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  strength: normative
+  applies_to:
+  - cmd.ps.record_continuation
+  condition:
+    op: is_null
+    args:
+    - concept: obj.ps.continuation_decision
+      attribute: customer_evidence_ref
+  action: deny
+- id: rule.ps.generic_draft_optional
+  type: rule
+  name: 没有方向初稿也可直接准备项目稿
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: normative
+  applies_to:
+  - cmd.ps.prepare_chinese
+  condition:
+    op: eq
+    args:
+    - concept: obj.ps.task
+      attribute: has_generic_draft
+    - literal: false
+  action: allow
+- id: rule.ps.explain_selection
+  type: rule
+  name: 选材解释关联学生依据与项目特点
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  strength: reference
+  applies_to:
+  - cmd.ps.prepare_chinese
+  condition:
+    literal: true
+  action: flag
+- id: hdp.ps.missing_requirements
+  type: human_decision_point
+  name: 官方要求仍缺失
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  - docs/scenarios/first-scenario/discovery.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  at: rule.ps.unknown_requirements_human_review
+  guidance: 保留查找出处和未知项，结合顾问手动网申反馈判断需补什么；可参考 PS 场景发现稿的缺要求处理。继续不受影响内容，不把未知改记为无限制。
+- id: hdp.ps.length_measurement
+  type: human_decision_point
+  name: 长度计量仍待核对
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  - docs/scenarios/first-scenario/discovery.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  at: rule.ps.length_measurement_unknown
+  guidance: 核对官网长度限制的计量单位及本次稿件测量方式；按实际要求完成检查，无法确定时保留问题，不假设已经满足。参考 PS 任务说明中的要求检查。
+- id: hdp.ps.background_conflict
+  type: human_decision_point
+  name: 背景差异或未核对细节
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  - docs/scenarios/first-scenario/discovery.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  at: cmd.ps.resolve_issue
+  guidance: 先查时间、版本和具体含义；仍不明时列原话与差异，由顾问协调学生核对中文。参考发现稿的背景冲突与经历核对条目。
+- id: hdp.ps.continue_unmet
+  type: human_decision_point
+  name: 未达标项目是否继续
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/sources/modeling-objective-2026-10-31.md
+  - docs/scenarios/first-scenario/discovery.md
+  context: ctx.ps.preparation
+  basis: confirmed_business
+  at: cmd.ps.record_continuation
+  guidance: 顾问与客户决定继续或放弃，记录未达原因与最终选择；继续申请不改变达标事实。参考已确认的未达标人工例外。

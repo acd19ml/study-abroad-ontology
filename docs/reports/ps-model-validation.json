@@ -1,0 +1,37 @@
+{
+  "version": "0.1.0-draft",
+  "mode": "draft",
+  "checks": {
+    "schema": "passed",
+    "references": "passed",
+    "aggregate_encapsulation": "passed",
+    "state_closure": "passed",
+    "rule_completeness": "passed",
+    "concept_references": "passed",
+    "metric_computability": "passed",
+    "role_coverage": "passed",
+    "mapping_coverage": "deferred_until_phase_4"
+  },
+  "errors": [],
+  "warnings": [
+    "metric.ps.manual_context_categories: baseline pending; not stage-0 accepted",
+    "Source contains review drafts; structural validity is not business approval or runtime validation",
+    "阶段 0 指标、基线和阈值尚待确认",
+    "聚合、状态、命令及执行等级为首次结构化提案",
+    "跨聚合变化传播策略尚未确定",
+    "实现映射与数据库技术栈后置"
+  ],
+  "counts": {
+    "aggregate": 3,
+    "command": 16,
+    "context": 1,
+    "event": 16,
+    "goal": 1,
+    "human_decision_point": 4,
+    "metric": 1,
+    "object": 15,
+    "relation": 22,
+    "role": 3,
+    "rule": 22
+  }
+}

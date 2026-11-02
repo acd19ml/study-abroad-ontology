@@ -1,0 +1,25 @@
+version: 0.1.0-draft
+status: draft
+context: ctx.ps.preparation
+files:
+- model/contexts/ps/value.yaml
+- model/contexts/ps/objects.yaml
+- model/contexts/ps/aggregates.yaml
+- model/contexts/ps/rules.yaml
+- model/contexts/ps/policies.yaml
+- model/contexts/ps/roles.yaml
+- model/contexts/ps/mappings.yaml
+schema: model/meta/model.schema.json
+stage_gates:
+  stage_0: incomplete
+  stage_1: business_meaning_reviewed
+  stage_2: source_draft_pending_review
+  stage_4: not_started
+pending:
+- 阶段 0 指标、基线和阈值尚待确认
+- 聚合、状态、命令及执行等级为首次结构化提案
+- 跨聚合变化传播策略尚未确定
+- 实现映射与数据库技术栈后置
+empty_sections:
+  policies: 用户目前仅确认变化影响范围；不假定自动传播策略或时限。
+  mappings: 阶段 4 前不虚构表、接口、服务等实现映射。

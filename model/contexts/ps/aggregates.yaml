@@ -1,0 +1,864 @@
+# 模型源；首次结构化表达为待评审草案。原文与理由通过 refs 关联。
+model_version: 0.1.0-draft
+elements:
+- id: cmd.ps.request_ps
+  type: command
+  name: 发起项目 PS 准备
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params:
+  - student_ref
+  - program_ref
+  - application_season
+  allowed_in: []
+  transition:
+    to: requested
+    creates: true
+  emits:
+  - evt.ps.ps_requested
+  execution_level: 仅人工
+  effects: []
+  preserves: []
+- id: evt.ps.ps_requested
+  type: event
+  name: 发起项目 PS 准备已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.request_ps
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.assemble_context
+  type: command
+  name: 取得并组装任务上下文
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.agent
+  params:
+  - context_packet_ref
+  allowed_in:
+  - requested
+  - context_ready
+  transition:
+    to: context_ready
+    creates: false
+  emits:
+  - evt.ps.context_assembled
+  execution_level: 执行后复核
+  effects: []
+  preserves: []
+- id: evt.ps.context_assembled
+  type: event
+  name: 取得并组装任务上下文已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.assemble_context
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.prepare_chinese
+  type: command
+  name: 准备项目中文稿
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.agent
+  params:
+  - chinese_version_ref
+  allowed_in:
+  - context_ready
+  - chinese_prepared
+  transition:
+    to: chinese_prepared
+    creates: false
+  emits:
+  - evt.ps.chinese_prepared
+  execution_level: 执行后复核
+  effects:
+  - 记录当前中文版本；保留拟写细节的待核对含义
+  preserves: []
+- id: evt.ps.chinese_prepared
+  type: event
+  name: 准备项目中文稿已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.prepare_chinese
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.confirm_chinese
+  type: command
+  name: 学生确认中文内容
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.student
+  params:
+  - target_version
+  - confirmation_ref
+  allowed_in:
+  - chinese_prepared
+  transition:
+    to: chinese_confirmed
+    creates: false
+  emits:
+  - evt.ps.chinese_confirmed
+  execution_level: 仅人工
+  effects:
+  - chinese_confirmed_version 指向实际确认的 current_chinese_version；保留确认记录
+  preserves: []
+- id: evt.ps.chinese_confirmed
+  type: event
+  name: 学生确认中文内容已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.confirm_chinese
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.generate_english
+  type: command
+  name: 依据确认中文生成英文
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.agent
+  params:
+  - english_version_ref
+  allowed_in:
+  - chinese_confirmed
+  transition:
+    to: english_prepared
+    creates: false
+  emits:
+  - evt.ps.english_generated
+  execution_level: 执行后复核
+  effects:
+  - english_based_on_chinese 指向当前已确认中文；记录当前英文版本
+  preserves: []
+- id: evt.ps.english_generated
+  type: event
+  name: 依据确认中文生成英文已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.generate_english
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.check_english
+  type: command
+  name: 检查英文稿及依据
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.agent
+  params:
+  - check_report_ref
+  allowed_in:
+  - english_prepared
+  - checked
+  transition:
+    to: checked
+    creates: false
+  emits:
+  - evt.ps.english_checked
+  execution_level: 执行后复核
+  effects:
+  - checked_english_version 指向实际检查的 current_english_version；未知要求保持未知
+  preserves: []
+- id: evt.ps.english_checked
+  type: event
+  name: 检查英文稿及依据已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.check_english
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.confirm_final
+  type: command
+  name: 顾问最终确认
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params:
+  - english_version_ref
+  - confirmation_ref
+  allowed_in:
+  - checked
+  transition:
+    to: consultant_confirmed
+    creates: false
+  emits:
+  - evt.ps.final_confirmed
+  execution_level: 仅人工
+  effects:
+  - 记录 final_english_version 和本次确认依据；不改变学校要求、达标事实或递交状态
+  preserves: []
+- id: evt.ps.final_confirmed
+  type: event
+  name: 顾问最终确认已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.confirm_final
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.revise_chinese
+  type: command
+  name: 修订中文内容
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params:
+  - new_chinese_version_ref
+  - reason
+  allowed_in:
+  - chinese_prepared
+  - chinese_confirmed
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  transition:
+    to: chinese_prepared
+    creates: false
+  emits:
+  - evt.ps.chinese_revised
+  execution_level: 仅人工
+  effects:
+  - 建立新的 current_chinese_version；当前任务的已确认中文、英文和检查指针置空，历史稿件及确认记录保留
+  preserves: []
+- id: evt.ps.chinese_revised
+  type: event
+  name: 修订中文内容已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.revise_chinese
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_issue
+  type: command
+  name: 记录具体核对问题
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.agent
+  params:
+  - issue_ref
+  allowed_in:
+  - requested
+  - context_ready
+  - chinese_prepared
+  - chinese_confirmed
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  transition:
+    to: same
+    creates: false
+  emits:
+  - evt.ps.issue_recorded
+  execution_level: 执行后复核
+  effects: []
+  preserves: []
+- id: evt.ps.issue_recorded
+  type: event
+  name: 记录具体核对问题已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.record_issue
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.resolve_issue
+  type: command
+  name: 记录人工核对结论
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params:
+  - issue_ref
+  - resolution
+  - evidence_ref
+  allowed_in:
+  - requested
+  - context_ready
+  - chinese_prepared
+  - chinese_confirmed
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  transition:
+    to: same
+    creates: false
+  emits:
+  - evt.ps.issue_resolved
+  execution_level: 仅人工
+  effects: []
+  preserves: []
+- id: evt.ps.issue_resolved
+  type: event
+  name: 记录人工核对结论已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.resolve_issue
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_continuation
+  type: command
+  name: 记录未达标项目的人工选择
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.task
+  root: obj.ps.task
+  role: role.ps.consultant
+  params:
+  - decision_ref
+  - customer_evidence_ref
+  allowed_in:
+  - requested
+  - context_ready
+  - chinese_prepared
+  - chinese_confirmed
+  - english_prepared
+  - checked
+  - consultant_confirmed
+  transition:
+    to: same
+    creates: false
+  emits:
+  - evt.ps.continuation_recorded
+  execution_level: 仅人工
+  effects:
+  - 仅更新 continuation_decision；不改写 eligibility
+  preserves:
+  - obj.ps.task.eligibility
+- id: evt.ps.continuation_recorded
+  type: event
+  name: 记录未达标项目的人工选择已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.record_continuation
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_student_context
+  type: command
+  name: 记录顾问提供的学生上下文快照
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.student_context
+  root: obj.ps.student_context
+  role: role.ps.consultant
+  params:
+  - student_ref
+  - source_refs
+  - revision
+  allowed_in: []
+  transition:
+    to: recorded
+    creates: true
+  emits:
+  - evt.ps.student_context_recorded
+  execution_level: 仅人工
+  effects: []
+  preserves: []
+- id: evt.ps.student_context_recorded
+  type: event
+  name: 记录顾问提供的学生上下文快照已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.record_student_context
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.refresh_student_context
+  type: command
+  name: 更新顾问反馈的学生上下文快照
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.student_context
+  root: obj.ps.student_context
+  role: role.ps.consultant
+  params:
+  - source_refs
+  - revision
+  allowed_in:
+  - recorded
+  transition:
+    to: recorded
+    creates: false
+  emits:
+  - evt.ps.student_context_refreshed
+  execution_level: 仅人工
+  effects: []
+  preserves: []
+- id: evt.ps.student_context_refreshed
+  type: event
+  name: 更新顾问反馈的学生上下文快照已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.refresh_student_context
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_official_knowledge
+  type: command
+  name: 记录学校官方项目知识
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.program_knowledge
+  root: obj.ps.program_knowledge
+  role: role.ps.agent
+  params:
+  - program_ref
+  - application_season
+  - source_refs
+  - revision
+  allowed_in: []
+  transition:
+    to: recorded
+    creates: true
+  emits:
+  - evt.ps.official_knowledge_recorded
+  execution_level: 执行后复核
+  effects:
+  - 先结构化入库，再作为任务依据；未知与明确无限制分开记录
+  preserves: []
+- id: evt.ps.official_knowledge_recorded
+  type: event
+  name: 记录学校官方项目知识已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.record_official_knowledge
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.refresh_official_knowledge
+  type: command
+  name: 修订学校官方项目知识
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.program_knowledge
+  root: obj.ps.program_knowledge
+  role: role.ps.agent
+  params:
+  - source_refs
+  - revision
+  allowed_in:
+  - recorded
+  transition:
+    to: recorded
+    creates: false
+  emits:
+  - evt.ps.official_knowledge_refreshed
+  execution_level: 执行后复核
+  effects:
+  - 保留来源及修订说明，不覆盖已有任务使用过的知识版本
+  preserves: []
+- id: evt.ps.official_knowledge_refreshed
+  type: event
+  name: 修订学校官方项目知识已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.refresh_official_knowledge
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: cmd.ps.record_portal_feedback
+  type: command
+  name: 记录顾问手动网申发现的差异
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  aggregate: agg.ps.program_knowledge
+  root: obj.ps.program_knowledge
+  role: role.ps.consultant
+  params:
+  - source_refs
+  - revision
+  allowed_in:
+  - recorded
+  transition:
+    to: recorded
+    creates: false
+  emits:
+  - evt.ps.portal_feedback_recorded
+  execution_level: 仅人工
+  effects:
+  - 顾问反馈与官网原始出处分别保留；不授权 AI 操作网申系统
+  preserves: []
+- id: evt.ps.portal_feedback_recorded
+  type: event
+  name: 记录顾问手动网申发现的差异已记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  produced_by: cmd.ps.record_portal_feedback
+  payload:
+  - name: aggregate_ref
+    type: identifier
+    meaning: 发生该业务事实的聚合标识
+    nullable: false
+  - name: revision
+    type: string
+    meaning: 对应版本
+    nullable: false
+- id: agg.ps.task
+  type: aggregate
+  name: 项目 PS 任务聚合
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  root: obj.ps.task
+  members:
+  - obj.ps.draft
+  - obj.ps.confirmation
+  - obj.ps.context_packet
+  - obj.ps.check_report
+  - obj.ps.issue
+  - obj.ps.continuation_decision
+  invariants:
+  - rule.ps.confirmed_chinese_before_english
+  - rule.ps.english_matches_chinese
+  - rule.ps.current_version_checked
+  extension_points: []
+- id: agg.ps.student_context
+  type: aggregate
+  name: 文书任务所用学生上下文读视图
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  root: obj.ps.student_context
+  members:
+  - obj.ps.applicant
+  - obj.ps.background_fact
+  - obj.ps.background_material
+  invariants: []
+  extension_points: []
+- id: agg.ps.program_knowledge
+  type: aggregate
+  name: 文书任务所用项目知识记录
+  status: draft
+  owner: role.ps.consultant
+  since: 0.1.0-draft
+  refs:
+  - docs/scenarios/first-scenario/discovery.md
+  - docs/proposals/ps-model-v0.1.md
+  context: ctx.ps.preparation
+  basis: agent_proposal
+  root: obj.ps.program_knowledge
+  members:
+  - obj.ps.program
+  - obj.ps.course
+  - obj.ps.requirement
+  invariants: []
+  extension_points: []
