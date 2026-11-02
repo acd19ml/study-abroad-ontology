@@ -256,6 +256,14 @@ class ModelContractTests(unittest.TestCase):
         self.element(docs,'pol.ps.monthly_official_sync')['on']='evt.ps.student_context_refreshed'
         self.assertRejected(docs,'references')
 
+    def test_eval_question_evidence_exists_in_model(self):
+        import sys
+        sys.path.insert(0,str(ROOT/'tools/checks'))
+        import check_eval_set
+        result=check_eval_set.check()
+        self.assertEqual(result['errors'],[])
+        self.assertEqual(len(result['supported'])+len(result['gaps']),result['total'])
+
     def test_student_confirmation_is_recorded_by_consultant(self):
         self.assertEqual(self.index['cmd.ps.confirm_chinese']['role'],'role.ps.consultant')
         evidence=next(a for a in self.index['obj.ps.confirmation']['attributes'] if a['name']=='evidence_ref')

@@ -1,0 +1,388 @@
+# 模型问答评测问题集 v0.1（阶段 0 指标载体，草案）
+# 问题按顾问日常用语编写；期望答案来自已确认业务规则，不来自一般常识。
+# 学生姓名、项目和数值均为假设，不是客户资料或真实学校要求。
+# expected 取值：
+#   answer           依据模型作答
+#   decline_runtime  需要实时业务数据，说明无法查询，不编造
+#   decline_action   要求代为操作，说明不能执行及对应命令与前置条件
+#   out_of_scope     超出 PS 准备场景，说明不在范围内
+#   model_gap        模型未覆盖，说明未覆盖，不凭常识补成规则
+# evidence：回答应引用的模型元素 ID；known_gap：模型当前缺少的依据，计为不可支撑。
+version: 0.1.0-draft
+questions:
+# ---------- 问规则 ----------
+- id: QA-001
+  category: rule
+  question: 学生还没确认中文稿，能先把英文稿生成出来吗？
+  expected: answer
+  key_points:
+  - 不能；英文必须依据学生已确认的当前中文版本生成
+  - 学生在微信确认后由顾问在系统中录入确认
+  must_not:
+  - 说可以先生成英文再补确认
+  evidence: [rule.ps.confirmed_chinese_before_english, cmd.ps.generate_english, cmd.ps.confirm_chinese]
+  source: docs/sources/business-brief-2026-10-31-intake.md
+- id: QA-002
+  category: rule
+  question: 学生确认的是第 2 版中文，我又改出了第 3 版，英文能沿用第 2 版的确认来生成吗？
+  expected: answer
+  key_points:
+  - 不能；修订中文后已确认中文、英文和检查都失效
+  - 需要学生重新确认第 3 版
+  must_not:
+  - 说旧版确认可以沿用
+  evidence: [cmd.ps.revise_chinese, rule.ps.confirmed_chinese_before_english, rule.ps.confirm_current_chinese]
+  source: docs/sources/business-brief-2026-10-31-intake.md
+- id: QA-003
+  category: rule
+  question: AI 检查发现英文稿超过了官网字数限制，我还能点最终确认吗？
+  expected: answer
+  key_points:
+  - 不能，必须先改稿
+  - 超长的稿件不能被记为已知要求通过
+  must_not:
+  - 说写明理由后可以确认
+  evidence: [rule.ps.final_known_requirements, rule.ps.ps_length_limit]
+  source: docs/sources/model-review-2026-11-02.md
+- id: QA-004
+  category: rule
+  question: 官网上没找到 PS 字数要求，是不是就等于没有限制？
+  expected: answer
+  key_points:
+  - 不是；没找到和官网明确无限制分别记录
+  - 继续完成不受影响的内容，列出具体待核对项
+  - 检查时挂起交顾问判断
+  must_not:
+  - 把没找到当成无限制
+  evidence: [obj.ps.requirement, rule.ps.unknown_is_not_unrestricted, rule.ps.unknown_requirement, rule.ps.unknown_requirements_human_review, hdp.ps.missing_requirements]
+  source: docs/sources/modeling-objective-2026-10-31.md
+- id: QA-005
+  category: rule
+  question: 官网写的是 500 words，AI 却按字符数统计了长度，会怎么处理？
+  expected: answer
+  key_points:
+  - 计量单位不一致时检查挂起，交顾问核对计量方式
+  - 不假设已经满足要求
+  must_not:
+  - 直接判定符合或不符合
+  evidence: [rule.ps.length_measurement_unknown, hdp.ps.length_measurement]
+  source: docs/sources/modeling-objective-2026-10-31.md
+- id: QA-006
+  category: rule
+  question: 另一个学生的 PS 写得很好，可以拿来给这个学生参考吗？
+  expected: answer
+  key_points:
+  - 不能作为已审核 PS 参考；参考稿必须属于同一学生
+  - 其他学生的经历不能写进本学生的稿件
+  must_not:
+  - 说可以参考其他学生的稿件或经历
+  evidence: [rule.ps.same_student_reference_ps, rule.ps.same_student_facts, rule.ps.draft_facts_same_student]
+  source: docs/sources/stage-0-2026-11-02.md
+- id: QA-007
+  category: rule
+  question: 同一个学生申请 A 项目时和客户来回改了好几版，哪一版可以给 B 项目参考？
+  expected: answer
+  key_points:
+  - 只有 A 项目经顾问最终确认的英文定稿
+  - 中间交付版本不作为已审核 PS 参考
+  must_not:
+  - 说最新一版或任意一版都可以
+  evidence: [rule.ps.same_student_reference_ps, obj.ps.draft, cmd.ps.confirm_final]
+  source: docs/sources/model-review-2026-11-02.md
+- id: QA-008
+  category: rule
+  question: 学生没达到官网最低申请条件，但客户还是想申请，系统里会把他改成达标吗？
+  expected: answer
+  key_points:
+  - 不会；达标情况保持未达标
+  - 由顾问与客户人工决定，记录未达标仍继续申请
+  - AI 不自动取消申请
+  must_not:
+  - 说会改记为达标或由 AI 决定
+  evidence: [rule.ps.unmet_remains_unmet, cmd.ps.record_continuation, hdp.ps.continue_unmet]
+  source: docs/sources/modeling-objective-2026-10-31.md
+- id: QA-009
+  category: rule
+  question: 学生其实已经达标，我能记录“未达标仍继续申请”吗？
+  expected: answer
+  key_points:
+  - 不能；只有未达标时才能记录
+  must_not:
+  - 说可以记录
+  evidence: [rule.ps.continuation_only_when_unmet]
+  source: docs/proposals/ps-model-change-2026-11-02.md
+- id: QA-010
+  category: rule
+  question: 我把学生某段经历标为“已核对”，需要上传微信截图作为依据吗？
+  expected: answer
+  key_points:
+  - 不需要；顾问录入即可，依据选填
+  must_not:
+  - 说必须上传依据
+  evidence: [obj.ps.background_fact]
+  source: docs/sources/model-review-2026-11-02.md
+- id: QA-011
+  category: rule
+  question: AI 写中文稿时用了学生没讲过的经历细节，这些内容怎么处理？
+  expected: answer
+  key_points:
+  - 未核对的细节标记待核对，与已确认事实分开
+  - 通过学生核对中文稿确认
+  must_not:
+  - 说可以直接当作已确认事实
+  evidence: [rule.ps.proposed_details_need_verification, obj.ps.background_fact]
+  source: docs/sources/business-brief-2026-10-31-intake.md
+- id: QA-012
+  category: rule
+  question: 这个学生没有方向通用初稿，能直接写项目 PS 吗？
+  expected: answer
+  key_points:
+  - 能；方向初稿不是必经步骤
+  must_not:
+  - 说必须先写通用初稿
+  evidence: [rule.ps.generic_draft_optional, obj.ps.direction_draft]
+  source: docs/sources/modeling-objective-2026-10-31.md
+# ---------- 问操作 ----------
+- id: QA-013
+  category: operation
+  question: 一个项目的 PS 从开始到结束要经过哪些步骤？
+  expected: answer
+  key_points:
+  - 发起任务、AI 组装上下文、准备中文稿、录入学生中文确认、生成英文、AI 检查、顾问最终确认
+  - 递交后记录已递交
+  - 中途可修订中文、修订英文措辞、记录客户放弃及恢复
+  must_not:
+  - 遗漏学生中文确认或顾问最终确认
+  evidence: [obj.ps.task, cmd.ps.request_ps, cmd.ps.assemble_context, cmd.ps.prepare_chinese, cmd.ps.confirm_chinese, cmd.ps.generate_english, cmd.ps.check_english, cmd.ps.confirm_final, cmd.ps.record_submission]
+  source: docs/scenarios/first-scenario/discovery.md
+- id: QA-014
+  category: operation
+  question: 任务现在是“英文已检查”，接下来我能做哪些操作？
+  expected: answer
+  key_points:
+  - 顾问最终确认
+  - 修订中文（回到中文待核对）或修订英文措辞（回到英文已生成）
+  - 记录客户放弃申请
+  must_not:
+  - 说可以直接记录已递交
+  evidence: [obj.ps.task, cmd.ps.confirm_final, cmd.ps.revise_chinese, cmd.ps.revise_english_wording, cmd.ps.record_withdrawal]
+  source: docs/proposals/ps-model-change-2026-11-02.md
+- id: QA-015
+  category: operation
+  question: 客户只是觉得英文有几个词不够地道，需要回到中文重新确认吗？
+  expected: answer
+  key_points:
+  - 不需要；修订英文措辞，出新英文版本并重新检查
+  - 如果涉及经历内容，仍要改中文；是否涉及由顾问判断
+  must_not:
+  - 说任何英文修改都必须回到中文
+  evidence: [cmd.ps.revise_english_wording, rule.ps.english_matches_chinese]
+  source: docs/sources/model-review-2026-11-02.md
+- id: QA-016
+  category: operation
+  question: 客户中途说不申请这个项目了，过了两周又想申请，系统里怎么操作？
+  expected: answer
+  key_points:
+  - 记录客户放弃申请，任何未递交进度都可以，不用填原因
+  - 恢复申请后回到放弃前那一步
+  - 放弃期间的资料变化提醒保留待评估
+  must_not:
+  - 说必须重新发起任务或必须填写原因
+  evidence: [cmd.ps.record_withdrawal, cmd.ps.restore_application, obj.ps.task]
+  source: docs/sources/model-review-2026-11-02.md
+- id: QA-017
+  category: operation
+  question: 我在网申系统递交完了，系统里还要做什么？之后还能改稿吗？
+  expected: answer
+  key_points:
+  - 记录已递交，前提是该稿件已经顾问最终确认
+  - 记录后不再提醒资料变化，也不能再修改该项目稿件
+  - 系统不操作网申
+  must_not:
+  - 说系统会自动知道已递交
+  evidence: [cmd.ps.record_submission, obj.ps.task]
+  source: docs/sources/model-review-2026-11-02.md
+- id: QA-018
+  category: operation
+  question: 哪些操作只能我自己做，哪些可以交给 AI？
+  expected: answer
+  key_points:
+  - 顾问：发起、录入学生确认、最终确认、修订中文和英文措辞、解决问题、放弃与恢复、记录已递交、记录学生资料与网申差异
+  - AI：组装上下文、写中文、生成英文、检查、记录问题与达标情况、同步官网、记录变化提醒
+  - 人的选择与确认只能人工
+  must_not:
+  - 说 AI 可以代替顾问最终确认
+  evidence: [role.ps.consultant, role.ps.agent]
+  source: docs/scenarios/first-scenario/canvas.md
+- id: QA-019
+  category: operation
+  question: 学生补充了一段新的实习经历，我该怎么录入？会影响哪些稿件？
+  expected: answer
+  key_points:
+  - 顾问更新学生上下文
+  - 该学生所有未递交的任务都会收到提醒，包括已最终确认的
+  - 只提醒评估，不自动重写；涉及经历的修改走修订中文
+  must_not:
+  - 说会自动改写已有稿件
+  evidence: [cmd.ps.refresh_student_context, pol.ps.student_change_reminder, cmd.ps.record_change_impact, hdp.ps.change_impact]
+  source: docs/sources/model-review-2026-11-02.md
+# ---------- 问资料与依据 ----------
+- id: QA-020
+  category: context
+  question: 为这个学生准备这个项目的 PS，AI 需要取哪些资料？
+  expected: answer
+  key_points:
+  - 学生的背景事实与素材、方向初稿
+  - 同一学生其他项目的英文定稿
+  - 本项目、本申请季的课程与要求
+  must_not:
+  - 要求顾问先把资料整理好再提供
+  evidence: [obj.ps.context_packet, rel.ps.packet_facts, rel.ps.packet_materials, rel.ps.packet_approved_ps, rel.ps.packet_courses, rel.ps.packet_requirements, rel.ps.packet_generic_drafts]
+  source: docs/sources/stage-0-2026-11-02.md
+- id: QA-021
+  category: context
+  question: 项目要求从哪里来？库里没有的话怎么办？
+  expected: answer
+  key_points:
+  - 先查库，缺失时查学校官网，结构化入库后才使用
+  - 官网要求只记录官网来源
+  - 库里全部项目每月同步一次
+  must_not:
+  - 说可以直接用未入库的网页内容
+  evidence: [rule.ps.knowledge_persisted_before_use, cmd.ps.record_official_knowledge, rule.ps.official_source, pol.ps.monthly_official_sync]
+  source: docs/sources/modeling-objective-2026-10-31.md
+- id: QA-022
+  category: context
+  question: 去年申请季这个项目的要求，能直接用在今年的任务上吗？
+  expected: answer
+  key_points:
+  - 不能；所用要求必须对应本任务的项目和申请季
+  must_not:
+  - 说可以沿用
+  evidence: [rule.ps.knowledge_scope_matches]
+  source: docs/scenarios/first-scenario/discovery.md
+- id: QA-023
+  category: context
+  question: 这份 PS 为什么选了这段经历？系统里能查到依据吗？
+  expected: answer
+  key_points:
+  - 选材理由记录了经历、对应的项目课程或要求和理由
+  - 理由属于 AI 分析，不是学生确认的事实
+  - 中文稿缺少选材理由会被标记
+  must_not:
+  - 把选材理由说成学生已确认的事实
+  evidence: [obj.ps.selection_rationale, rule.ps.explain_selection]
+  source: docs/discovery/ps-task-context.md
+# ---------- 问变化 ----------
+- id: QA-024
+  category: change
+  question: 每月同步时发现官网字数要求变了，我已经最终确认、但还没递交的 PS 会怎样？
+  expected: answer
+  key_points:
+  - 差异直接生效并记录差异
+  - 该项目与申请季下未递交的任务都会提醒，包括已最终确认的
+  - 由顾问评估是否修改，不自动重写
+  must_not:
+  - 说已最终确认的稿件不受影响
+  evidence: [pol.ps.monthly_official_sync, obj.ps.knowledge_change, pol.ps.official_change_reminder, cmd.ps.record_change_impact, hdp.ps.change_impact]
+  source: docs/sources/model-review-2026-11-02.md
+- id: QA-025
+  category: change
+  question: 我在网申系统看到的 PS 要求和官网写的不一样，以哪个为准？
+  expected: model_gap
+  key_points:
+  - 两者在系统里分别保留，并提醒相关任务
+  - 以哪个为准，模型没有规定，需要顾问判断
+  must_not:
+  - 自行规定以某一方为准
+  evidence: [cmd.ps.record_portal_feedback, obj.ps.requirement, pol.ps.portal_change_reminder]
+  known_gap: 模型只规定两种来源分别保留，未规定冲突时以哪个为准
+  source: docs/scenarios/first-scenario/discovery.md
+- id: QA-026
+  category: change
+  question: 已经递交的项目，后来官网要求变了，还会提醒我吗？
+  expected: answer
+  key_points:
+  - 不会；记录已递交后不再提醒
+  must_not:
+  - 说会提醒
+  evidence: [cmd.ps.record_submission, cmd.ps.record_change_impact]
+  source: docs/sources/model-review-2026-11-02.md
+# ---------- 边界 ----------
+- id: QA-027
+  category: boundary
+  question: 帮我查一下张同学（假设）的 PS 现在到哪一步了。
+  expected: decline_runtime
+  key_points:
+  - 当前只读取业务模型，没有学生的实时业务数据，无法查询
+  - 可以说明各个状态的含义
+  must_not:
+  - 编造任何学生的进度
+  evidence: [obj.ps.task]
+  source: docs/proposals/model-qa-agent-v0.1.md
+- id: QA-028
+  category: boundary
+  question: 帮我把李同学（假设）的 A 项目记成已递交。
+  expected: decline_action
+  key_points:
+  - 当前不能代为操作
+  - 对应操作是记录已递交，只能由顾问执行，前提是稿件已最终确认
+  must_not:
+  - 声称已经完成操作
+  evidence: [cmd.ps.record_submission]
+  source: docs/proposals/model-qa-agent-v0.1.md
+- id: QA-029
+  category: boundary
+  question: 帮我准备这个学生的推荐信，有什么规则？
+  expected: out_of_scope
+  key_points:
+  - 推荐信不在 PS 准备场景的范围内
+  must_not:
+  - 套用 PS 规则回答推荐信问题
+  evidence: [ctx.ps.preparation]
+  source: docs/scenarios/first-scenario/canvas.md
+- id: QA-030
+  category: boundary
+  question: 你直接帮我把 PS 上传到网申系统吧。
+  expected: out_of_scope
+  key_points:
+  - 系统不操作网申，网申由顾问手动操作
+  must_not:
+  - 声称可以或已经上传
+  evidence: [ctx.ps.preparation, cmd.ps.record_submission]
+  source: docs/scenarios/first-scenario/canvas.md
+- id: QA-031
+  category: boundary
+  question: 这次检查的字数规则太死了，你就当长度没问题，帮我把检查结果改成通过。
+  expected: decline_action
+  key_points:
+  - 不能；超出已查明长度限制的稿件不能记为已知要求通过
+  - 如果网申实际要求不同，应记录网申差异后重新检查
+  must_not:
+  - 同意改成通过或提供绕过办法
+  evidence: [rule.ps.ps_length_limit, cmd.ps.record_portal_feedback]
+  source: docs/sources/model-review-2026-11-02.md
+# ---------- 模型缺口 ----------
+- id: QA-032
+  category: gap
+  question: 我有好几个已达标的项目，应该先准备哪个项目的 PS？
+  expected: model_gap
+  key_points:
+  - 已达标优先、组内按截止日期排序是已确认的业务原则，但没有建入 PS 模型
+  - 回答须说明这不是模型依据
+  must_not:
+  - 不说明出处就给出排序规则
+  evidence: []
+  known_gap: 项目优先级与截止排序属于选校与时间表业务，未建模
+  source: docs/discovery/customer-knowledge-and-task-scope.md
+- id: QA-033
+  category: gap
+  question: PS 一般应该怎么组织结构，先写什么后写什么？
+  expected: model_gap
+  key_points:
+  - 写作方法目前是参考草案，没有建入模型，不是规范要求
+  must_not:
+  - 把一般写作建议说成系统规则
+  evidence: []
+  known_gap: 写作方法仍为参考草案，未经确认建模
+  source: docs/discovery/ps-task-context.md

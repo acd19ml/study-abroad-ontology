@@ -11,7 +11,7 @@ python3 tools/generator/render_model.py --check
 
 `--check` 根据当前模型、Schema、生成器和模板重算输出；HTML 缺失、源已变而未生成，或生成文件被手动编辑时返回非零。
 
-首选入口是 `generated/ps-model-explorer.html`；原 `generated/ps-model.html` 作为兼容入口由同一生成器写入相同内容，两个入口均纳入一致性检查。内部模板使用 `.html.tpl` 后缀，不作为交付页面。
+唯一入口是 `generated/ps-model-explorer.html`；原兼容入口 `generated/ps-model.html` 已于 2026-11-02 按用户要求删除。`--check` 发现 `generated/` 下有其他 HTML 时会报错。内部模板使用 `.html.tpl` 后缀，不作为交付页面。
 
 写出前必须确认全部模板占位符已展开，且最终页面中的 JSON 与本次已验证模型完全一致；检查失败时保留上一份有效产物，防止把未展开模板作为可交互页面交付。
 

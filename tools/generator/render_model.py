@@ -19,7 +19,6 @@ from validate_model import load_model, terms, validate, yaml
 
 TEMPLATE=Path('tools/generator/templates/model-explorer.html.tpl')
 OUTPUT=Path('generated/ps-model-explorer.html')
-ALIASES=(Path('generated/ps-model.html'),)
 
 
 def digest_files(root, paths):
@@ -184,15 +183,15 @@ def render(root=ROOT):
 def write_or_check(root=ROOT,check=False):
     html=render(root)
     if check:
-        for relative in (OUTPUT,*ALIASES):
-            output=root/relative
-            if not output.exists() or output.read_text()!=html:
-                raise ValueError(f'{relative}: HTML is missing/stale/edited. Change model or template, then regenerate.')
+        output=root/OUTPUT
+        if not output.exists() or output.read_text()!=html:
+            raise ValueError(f'{OUTPUT}: HTML is missing/stale/edited. Change model or template, then regenerate.')
+        extra=sorted(str(p.relative_to(root)) for p in (root/OUTPUT.parent).glob('*.html') if p!=output)
+        if extra:raise ValueError(f'Only {OUTPUT} is a published page; remove {extra}')
         print('Generated HTML is synchronized with model and generator sources.')
     else:
-        for relative in (OUTPUT,*ALIASES):
-            output=root/relative
-            output.parent.mkdir(parents=True,exist_ok=True);output.write_text(html)
+        output=root/OUTPUT
+        output.parent.mkdir(parents=True,exist_ok=True);output.write_text(html)
         print(f'Generated {OUTPUT} ({len(html.encode()):,} bytes)')
 
 
@@ -209,9 +208,8 @@ def main():
                 try:
                     html=render();signature=hashlib.sha256(html.encode()).hexdigest()
                     if signature!=last:
-                        for relative in (OUTPUT,*ALIASES):
-                            (ROOT/relative).parent.mkdir(parents=True,exist_ok=True)
-                            (ROOT/relative).write_text(html)
+                        (ROOT/OUTPUT).parent.mkdir(parents=True,exist_ok=True)
+                        (ROOT/OUTPUT).write_text(html)
                         last=signature
                         print(f'Updated {OUTPUT}; refresh the browser.',flush=True)
                 except (ValueError,OSError,KeyError,yaml.YAMLError) as exc:
