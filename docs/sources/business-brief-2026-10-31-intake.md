@@ -81,7 +81,7 @@
 - 每位学生建立申请专用邮箱，由顾问维护，账号和密码需要记录。
 - 此处确认的是管理需求，不含任何真实账号密码；学校网申账号是否一并记录及一般申请提交人，后续明确。
 
-状态与邮箱管理的整理草案见[申请跟进与账号管理](../discovery/application-tracking.md)。
+状态与邮箱管理的整理草案见申请跟进与账号管理。
 
 ## R8：邮件识别、顾问待办与账号存储偏好
 
@@ -102,15 +102,4 @@
 
 ## 后续草案
 
-Agent 已依据上述方式更新[客户资料收集与背景挖掘方案](../discovery/client-intake-and-background.md)，供用户修改确认。已明确事项按本记录更新，其余提问内容、追问规则、收集状态和完成条件仍为建议。
-
-<!-- MODEL-REFS:START -->
-## 模型关联索引
-
-此段由 `tools/checks/sync_model_refs.py` 根据模型源的 `refs` 同步，仅用于双向定位。
-
-- `rule.ps.confirm_current_chinese`
-- `rule.ps.confirmed_chinese_before_english`
-- `rule.ps.english_matches_chinese`
-- `rule.ps.proposed_details_need_verification`
-<!-- MODEL-REFS:END -->
+Agent 已依据上述方式更新客户资料收集与背景挖掘方案，供用户修改确认。已明确事项按本记录更新，其余提问内容、追问规则、收集状态和完成条件仍为建议。

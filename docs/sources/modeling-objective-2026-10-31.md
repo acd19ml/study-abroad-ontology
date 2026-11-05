@@ -22,7 +22,7 @@
 
 ## 后续建模讨论的依据
 
-详细整理见[Agent 自主工作与建模目标](../discovery/agent-autonomy-requirements.md)。其中用户目标已确认，资料优先级、核验规则、自动采纳标准和具体执行等级仍需按实际业务继续确认。
+详细整理见Agent 自主工作与建模目标。其中用户目标已确认，资料优先级、核验规则、自动采纳标准和具体执行等级仍需按实际业务继续确认。
 
 ## 用户确认方向并要求继续
 
@@ -101,31 +101,3 @@
 - 12 个月求职服务同样排除岗位搜集、私人内推或资源牵线、投递计划；提供职业方向建议、公开平台使用指导、求职简历修改与围绕学生提供目标岗位的面试准备。
 
 用户认为访谈粒度过细，要求对照八阶段判断当前位置及下一步。后续应先收口阶段产出、说明通过条件的缺口，不继续无限扩展全业务细节。此次没有选定首个场景或确认阶段验收通过。
-
-<!-- MODEL-REFS:START -->
-## 模型关联索引
-
-此段由 `tools/checks/sync_model_refs.py` 根据模型源的 `refs` 同步，仅用于双向定位。
-
-- `goal.ps.autonomous_context`
-- `hdp.ps.background_conflict`
-- `hdp.ps.continue_unmet`
-- `hdp.ps.length_measurement`
-- `hdp.ps.missing_requirements`
-- `rule.ps.confirm_current_chinese`
-- `rule.ps.confirmed_chinese_before_english`
-- `rule.ps.continuation_only_when_unmet`
-- `rule.ps.draft_facts_same_student`
-- `rule.ps.english_matches_chinese`
-- `rule.ps.generic_draft_optional`
-- `rule.ps.knowledge_persisted_before_use`
-- `rule.ps.official_source`
-- `rule.ps.proposed_details_need_verification`
-- `rule.ps.ps_length_limit`
-- `rule.ps.same_student_facts`
-- `rule.ps.same_student_reference_ps`
-- `rule.ps.unknown_is_not_unrestricted`
-- `rule.ps.unknown_requirement`
-- `rule.ps.unknown_requirements_human_review`
-- `rule.ps.unmet_remains_unmet`
-<!-- MODEL-REFS:END -->

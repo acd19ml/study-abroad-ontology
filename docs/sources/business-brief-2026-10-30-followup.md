@@ -33,5 +33,5 @@
 
 ## 待用户确认的草案
 
-- [端到端业务运作与系统职责](../discovery/service-workflow.md)。
+- 端到端业务运作与系统职责。
 - [首个场景未决问题与当前访谈轮次](../scenarios/first-scenario/questions.md)。
