@@ -12,7 +12,7 @@
 
 ## 当前讨论入口
 
-**当前可在 [交互 HTML](generated/ps-model-explorer.html) 中浏览模型，并对照 [结构评审提案](docs/proposals/ps-model-v0.1.md)及 [2026-11-02 评审修订提案](docs/proposals/ps-model-change-2026-11-02.md)。阶段 0 至 2 已通过；下一步是网页版只读[模型问答 AI](docs/proposals/model-qa-agent-v0.1.md)及其[评测问题集](evals/model-qa/README.md)。** 可点开节点属性、边的定义、状态转换和来源。页面为只读投影，修改回到[模型源](model/README.md)；它不代表已部署图数据库或运行时业务 Agent。
+**当前可在 [交互 HTML](generated/ps-model-explorer.html) 中浏览模型，并对照 [结构评审提案](docs/proposals/ps-model-v0.1.md)及 [2026-11-02 评审修订提案](docs/proposals/ps-model-change-2026-11-02.md)。阶段 0 至 2 已通过；阶段 3 [架构决策记录](docs/adr/README.md)已起草待采纳；下一步是网页版只读[模型问答 AI](docs/proposals/model-qa-agent-v0.1.md)及其[评测问题集](evals/model-qa/README.md)。** 可点开节点属性、边的定义、状态转换和来源。页面为只读投影，修改回到[模型源](model/README.md)；它不代表已部署图数据库或运行时业务 Agent。
 
 1. 从下方业务轮廓理解已确认服务和待确认环节。
 2. 结合自主工作目标，在[未决问题](docs/scenarios/first-scenario/questions.md)中记录业务结论，逐项说明任务所需事实、资料关系、约束、判断依据和人工决策点。
