@@ -30,8 +30,8 @@
 | B4 | `docs/sources/business-brief-2026-10-31-intake.md`（递交确认、背景、邮箱，R4–R9） |
 | B5 | `docs/sources/business-brief-2026-10-31-value-and-projects.md`（专业依据、建议表，R10–R14） |
 | B6 | `docs/sources/modeling-objective-2026-10-31.md`（AI 自主工作目标，R15–R24） |
-| B7 | `docs/sources/stage-0-2026-11-02.md`（首场景与成功标准，R25） |
-| B8 | `docs/sources/model-review-2026-11-02.md`（PS 流程细节答复，R26） |
+| B7 | `docs/sources/first-scenario-2026-11-02.md`（首场景与成功标准，R25） |
+| B8 | `docs/sources/ps-process-answers-2026-11-02.md`（PS 流程细节答复，R26） |
 | B9 | `docs/sources/product-vision-2026-11-02.md`（产品长期愿景） |
 | C | `docs/sources/contract-v3.md`（全程服务协议 V3 条文索引） |
 | Q-nnn | `docs/scenarios/first-scenario/questions.md` 中对应问题的结论 |
