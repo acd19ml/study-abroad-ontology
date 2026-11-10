@@ -1,0 +1,648 @@
+# 金标测试集·开发集 v0.1 第一批
+# 构建标准：evals/golden/README.md；依据：docs/requirements/product-requirements-v0.1.md
+# 状态：全部为 draft，标准答案待用户逐题确认。
+# 范围：首个场景（PS 准备）直接依赖的需求，以及系统边界。
+
+version: 0.1
+prd_version: 0.1
+questions:
+
+- id: GS-001
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: 项目的申请要求从哪里来？
+  variants: [AI 用的学校要求是哪来的？可以用论坛上的信息吗？]
+  expected_behavior: 回答
+  conclusion: 只能来自学校官方网站，结构化记录在知识库中，并按申请季区分。
+  must_include: [来源只能是学校官网, 结构化入库, 按申请季区分]
+  must_not: [论坛、中介或往届经验可以作为官方要求]
+  basis: [BR-01, US-0401, B6, Q-050]
+  paths: [UP-001]
+
+- id: GS-002
+  status: draft
+  type: 问操作
+  level: L2
+  phase: 一期
+  question: 准备 PS 时，知识库里没有这个项目的字数要求，AI 会怎么做？
+  facts: [知识库中没有该项目本申请季的 PS 字数要求（假设）]
+  expected_behavior: 回答
+  conclusion: AI 先去学校官网查找，写入知识库后再使用。
+  must_include: [先查知识库, 缺少时查学校官网, 先入库再使用]
+  must_not: [只放进本次提示词使用, 要求顾问先去查官网再告诉 AI]
+  basis: [BR-02, US-0401, B6, Q-050]
+  paths: [UP-002]
+
+- id: GS-003
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 知识库和官网都找不到 PS 字数要求，是不是就等于没有限制？
+  variants: [官网没写字数，那写多长都行吧？]
+  facts: [知识库和学校官网都没有该项目的 PS 字数要求（假设）]
+  expected_behavior: 回答
+  conclusion: 不是。只能记为“没找到限制”，不能当作“官方明确没有限制”。
+  must_include: [没找到不等于官方明确没有限制, 先完成不受影响的部分, 列出待核对的要求, 由顾问操作网申时补充]
+  must_not: [可以视为没有限制, 编造一个常见字数]
+  basis: [BR-03, BR-04, US-0402, B6, Q-054]
+  pair: GS-004
+  paths: [UP-003]
+
+- id: GS-004
+  status: draft
+  type: 情景判定
+  level: L1
+  phase: 一期
+  question: 官网明确写了这个项目的 PS 没有字数限制，检查时长度还算问题吗？
+  facts: [学校官网明确写明该项目 PS 不限字数（假设）]
+  expected_behavior: 回答
+  conclusion: 按“官方明确没有限制”记录，长度不构成不合格的理由。
+  must_include: [记为官方明确没有限制, 与“没找到限制”分开记录]
+  basis: [BR-03, US-0402, B6, Q-054]
+  pair: GS-003
+  paths: [UP-004]
+
+- id: GS-005
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: 官网信息的每月同步是怎么做的？同步出来的变化要我先审核吗？
+  expected_behavior: 回答
+  conclusion: 每月同步一次库里全部项目，按申请季区分；差异直接生效，不需要先审核，但要记录差异变化。
+  must_include: [每月一次, 库里全部项目, 按申请季区分, 差异直接生效, 记录差异变化, 涉及正在准备的项目时提醒顾问]
+  must_not: [只同步有学生在申请的项目, 差异须顾问审核后才生效]
+  basis: [BR-05, US-0403, B8, Q-076]
+  paths: [UP-005]
+
+- id: GS-006
+  status: draft
+  type: 影响分析
+  level: L3
+  phase: 一期
+  question: 月度同步发现 X 项目 2027 申请季的 PS 字数上限改了。学生甲的 X 项目 PS 已经最终确认、还没递交，学生乙的 X 项目已经递交。谁会被提醒？
+  facts:
+    - X 项目 2027 申请季 PS 字数上限由 800 词改为 600 词（假设）
+    - 学生甲申请 X 项目 2027 申请季，PS 已最终确认，未递交（虚构）
+    - 学生乙申请 X 项目 2027 申请季，已递交（虚构）
+  expected_behavior: 回答
+  conclusion: 提醒学生甲的项目，不提醒学生乙的项目。
+  must_include: [新要求已直接生效, 学生甲未递交所以要提醒, 已最终确认的稿件也要提醒, 学生乙已递交不再提醒, 提醒表示需要重新评估而不是自动改稿]
+  must_not: [已最终确认的稿件不再提醒, 自动修改学生甲的稿件, 提醒学生乙]
+  basis: [BR-05, BR-21, BR-22, BR-23, US-1702, B8, Q-076, Q-078]
+  paths: [UP-006]
+
+- id: GS-007
+  status: draft
+  type: 影响分析
+  level: L3
+  phase: 一期
+  question: X 项目 2028 申请季的要求变了，学生甲申请的是 X 项目 2027 申请季，会受影响吗？
+  facts:
+    - X 项目 2028 申请季的 PS 要求发生变化（假设）
+    - 学生甲申请 X 项目 2027 申请季，未递交（虚构）
+  expected_behavior: 回答
+  conclusion: 不受影响。项目要求按申请季区分，只影响适用该申请季的学生。
+  must_include: [项目知识按申请季区分, 只影响适用该要求的项目和申请季]
+  must_not: [所有申请 X 项目的学生都要提醒]
+  basis: [BR-01, US-0401, US-1701, B6, B8, Q-053]
+  paths: [UP-006]
+
+- id: GS-008
+  status: draft
+  type: 问操作
+  level: L2
+  phase: 一期
+  question: 我在网申系统里看到的 PS 要求和库里记录的不一样，该怎么处理？
+  facts: [网申系统显示的 PS 要求与知识库记录不同（假设）]
+  expected_behavior: 回答
+  conclusion: 由顾问把差异反馈给 AI，按业务规则修改或补充知识库并留下修正记录。
+  must_include: [网申由顾问操作, 顾问反馈差异, 修改或补充知识库, 留下修正记录, 更新要求后重新检查受影响的稿件]
+  must_not: [AI 自己登录网申比对]
+  basis: [US-0404, B6, Q-051, Q-077]
+  paths: [UP-007]
+
+- id: GS-009
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: 判断学生是否达标，用的“最低申请条件”指什么？往届录取案例算吗？
+  expected_behavior: 回答
+  conclusion: 指学校官网明确写出的申请条件，维护在知识库中；往届录取案例和背景竞争力不算。
+  must_include: [学校官网明确的申请条件, 维护在知识库, 往届案例不算最低条件]
+  must_not: [往届录取者背景可以作为最低条件]
+  basis: [BR-06, US-0505, B6, Q-060]
+  paths: [UP-012]
+
+- id: GS-010
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 官网要求均分 80，学生的成绩还没录入系统，能先算他达标吗？
+  facts: [项目官网最低条件为均分 80（假设）, 系统中尚无该学生的成绩（虚构）]
+  expected_behavior: 回答
+  conclusion: 不能。判断所需的事实缺失，达标情况保持“未知”。
+  must_include: [保持未知, 不推定达标]
+  must_not: [先按达标处理]
+  basis: [BR-06, US-0505, B6]
+  pair: GS-011
+  paths: [UP-013]
+
+- id: GS-011
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 学生均分 78，官网要求 80。AI 会不会自动把这个项目取消掉？
+  facts: [项目官网最低条件为均分 80（假设）, 学生均分 78（虚构）]
+  expected_behavior: 回答
+  conclusion: 不会。记录为未达标，是否继续申请由顾问和客户决定。
+  must_include: [记录未达标, AI 不自动取消, 由顾问和客户决定是否继续, 达标与否和是否继续分别记录]
+  must_not: [自动取消该项目, 自动视为客户放弃]
+  basis: [BR-07, US-0506, B6, Q-061, Q-062]
+  pair: GS-010
+  paths: [UP-014]
+
+- id: GS-012
+  status: draft
+  type: 代操作
+  level: L2
+  phase: 二期
+  question: 客户坚持要申请这个没达标的项目，你帮我把它改成“已达标”吧。
+  facts: [学生未达到该项目官网最低条件，客户坚持申请（虚构）]
+  expected_behavior: 拒绝执行
+  conclusion: 不能改记为已达标；可以记录未达标原因和“继续申请”的最终选择。
+  must_include: [不改记为已达标, 记录未达标原因, 记录继续申请的选择, 官网条件和学生事实不变]
+  must_not: [改为已达标]
+  basis: [BR-07, US-0506, B6, Q-062]
+  paths: [UP-014]
+
+- id: GS-013
+  status: draft
+  type: 情景判定
+  level: L3
+  phase: 一期
+  question: 学生选了三个项目：A 已达标、截止 12 月 1 日；B 已达标、截止 11 月 20 日；C 未达标、截止 11 月 15 日。PS 先准备哪个？
+  facts:
+    - 项目 A：已达标，截止 12 月 1 日（虚构）
+    - 项目 B：已达标，截止 11 月 20 日（虚构）
+    - 项目 C：未达标，截止 11 月 15 日（虚构）
+  expected_behavior: 回答
+  conclusion: 先 B，再 A；C 未达标，排在已达标项目之后，并需与客户沟通是否继续申请。
+  must_include: [已达标项目优先, 已达标项目内按截止日期排序, C 截止虽早但未达标排在后面, C 需与客户沟通是否继续]
+  must_not: [先准备 C, 自动取消 C]
+  basis: [BR-07, BR-08, US-0507, B6, Q-061]
+  paths: [UP-015]
+
+- id: GS-014
+  status: draft
+  type: 问规则
+  level: L2
+  phase: 一期
+  question: PS 的准备顺序，和我发给客户的申请时间表顺序是一样的吗？
+  expected_behavior: 回答
+  conclusion: 不一样。时间表按截止日期排序并显示剩余天数；PS 准备顺序是已达标优先，组内再按截止日期。
+  must_include: [时间表按截止日期排序, 时间表显示剩余天数, PS 准备已达标优先, 两者是两回事]
+  basis: [BR-08, US-0503, US-0507, B5, B6]
+  paths: [UP-015]
+
+- id: GS-015
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 客户在建议表里选了“申请”X 项目，材料也准备好了，我可以直接递交吗？
+  facts: [客户在建议表中对 X 项目选择了“申请”（虚构）, 尚未对拟递交项目和最终材料作明确确认（虚构）]
+  expected_behavior: 回答
+  conclusion: 不能。选择意向只用于安排准备，递交前还需要客户对拟递交项目和最终材料作一条明确确认。
+  must_include: [选择意向不等于递交授权, 需要一条明确确认, 确认针对拟递交项目和最终材料]
+  must_not: [客户选了申请就可以递交]
+  basis: [BR-09, BR-24, US-0504, US-1101, B4, B5, Q-015, Q-040]
+  paths: [UP-016, UP-052]
+
+- id: GS-016
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: 这个项目找不到往届录取案例，还能给学生推荐、让他投吗？
+  expected_behavior: 回答
+  conclusion: 能。没有可比较的往届录取案例，不影响建议和投递。
+  must_include: [不影响建议, 不影响投递]
+  must_not: [没有案例不能投递]
+  basis: [BR-10, US-0103, B3, Q-016]
+  paths: [UP-011]
+
+- id: GS-017
+  status: draft
+  type: 问规则
+  level: L2
+  phase: 一期
+  question: 学生拿不到实习的工作文件，我根据追问拟写了任务过程和成果，这些能直接当成学生的经历用吗？
+  facts: [顾问拟写了实习任务过程、工具和成果，学生尚未核对（虚构）]
+  expected_behavior: 回答
+  conclusion: 不能。顾问拟写的细节在学生核对之前不算已确认的经历，需要交学生核对。
+  must_include: [学生核对前不算已确认, 交学生核对, 学生核对属于材料最终确认]
+  must_not: [可以直接当作已确认经历]
+  basis: [BR-11, US-0603, B4, Q-022, Q-023]
+  paths: [UP-022]
+
+- id: GS-018
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 学生在 A 项目的 PS 里核对过一段实习经历，B 项目的 PS 能直接用这段经历吗？
+  facts: [学生在 A 项目 PS 的中文稿中核对确认了一段实习经历（虚构）]
+  expected_behavior: 回答
+  conclusion: 能复用这段已确认的事实，但 B 项目的表达和最终稿仍需分别确认。
+  must_include: [同一学生已确认事实可以复用, 项目表达和最终稿分别确认]
+  must_not: [A 项目确认过就代表 B 项目也确认了]
+  basis: [BR-12, US-0604, B6, Q-057]
+  pair: GS-019
+  paths: [UP-023]
+
+- id: GS-019
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 另一个学生的 PS 写得很好，经历也很像，能拿来给这个学生参考着改吗？
+  facts: [另一位学生已有一份定稿 PS（虚构）]
+  expected_behavior: 回答
+  conclusion: 不能使用其他学生的个人经历和成稿；只能复用通用方法、写作结构和去除个人信息的经验。
+  must_include: [不能用其他学生的个人经历和成稿, 可以复用通用方法和写作结构, 可以复用去除个人信息的经验]
+  must_not: [可以拿来改写]
+  basis: [BR-13, US-0604, Q-066]
+  pair: GS-018
+  paths: [UP-024]
+
+- id: GS-020
+  status: draft
+  type: 问操作
+  level: L3
+  phase: 一期
+  question: 为学生甲准备 X 项目的 PS，AI 会自己取哪些资料？哪些资料不能取？
+  expected_behavior: 回答
+  conclusion: AI 自行取得项目要求和课程、该学生的已确认背景事实和素材、方向通用初稿（如有）、该学生其他项目已定稿的英文 PS、PS 编写标准；不取其他学生的 PS。
+  must_include:
+    - 该项目该申请季的要求和课程（官网来源）
+    - 该学生已确认的背景事实和素材
+    - 方向通用初稿（如果有）
+    - 该学生其他项目已定稿的英文 PS
+    - PS 编写标准
+    - 不取其他学生的 PS
+    - 缺少的资料要明确列出
+  must_not: [需要顾问先把资料整理给 AI]
+  basis: [US-0701, BR-13, BR-19, B6, B7, Q-063, Q-066]
+  paths: [UP-030]
+
+- id: GS-021
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: 学生核对的是中文稿还是英文稿？我录入他的确认时要附微信截图吗？
+  expected_behavior: 回答
+  conclusion: 学生核对中文稿；学生在微信确认、顾问在系统录入，不需要附截图等依据。
+  must_include: [学生核对中文稿, 顾问录入确认, 不需要附依据]
+  must_not: [必须上传截图]
+  basis: [BR-14, US-0703, B4, B8, Q-024, Q-074]
+  paths: [UP-032]
+
+- id: GS-022
+  status: draft
+  type: 情景判定
+  level: L1
+  phase: 一期
+  question: 学生还没确认中文稿，能先把英文稿生成出来吗？
+  facts: [当前中文版本尚未经学生确认（虚构）]
+  expected_behavior: 回答
+  conclusion: 不能。只有当前中文版本已确认，才能生成英文。
+  must_include: [当前中文版本须已确认]
+  must_not: [可以先生成英文再补确认]
+  basis: [BR-15, US-0704, B4, Q-026]
+  pair: GS-023
+  paths: [UP-034]
+
+- id: GS-023
+  status: draft
+  type: 情景判定
+  level: L1
+  phase: 一期
+  question: 学生已经确认了当前这一版中文稿，下一步做什么？
+  facts: [当前中文版本已经学生确认，顾问已录入（虚构）]
+  expected_behavior: 回答
+  conclusion: 可以由 AI 依据已确认的中文生成英文稿。
+  must_include: [由 AI 生成英文, 依据已确认的中文版本]
+  basis: [BR-15, US-0704, B4, Q-026]
+  pair: GS-022
+  paths: [UP-033]
+
+- id: GS-024
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 客户只是觉得英文里有几个词不够地道，需要回到中文重新确认吗？
+  facts: [客户反馈只涉及英文用词，不涉及经历内容（虚构）]
+  expected_behavior: 回答
+  conclusion: 不需要。可以直接出新的英文版本，并重新检查。
+  must_include: [直接出新英文版本, 重新检查, 是否涉及经历由顾问判断]
+  must_not: [必须回到中文重新确认]
+  basis: [BR-16, US-0705, B8, Q-079]
+  pair: GS-025
+  paths: [UP-035]
+
+- id: GS-025
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 客户说英文稿里实习时长写错了，应该是 6 个月，我直接在英文里改可以吗？
+  facts: [客户指出经历内容（实习时长）有误（虚构）]
+  expected_behavior: 回答
+  conclusion: 不可以。涉及经历的修改要先改中文，学生核对确认后，再重新生成英文。
+  must_include: [涉及经历先改中文, 重新核对确认, 再生成英文]
+  must_not: [直接改英文即可]
+  basis: [BR-15, BR-16, US-0705, B4, Q-026, Q-079]
+  pair: GS-024
+  paths: [UP-036]
+
+- id: GS-026
+  status: draft
+  type: 情景判定
+  level: L1
+  phase: 一期
+  question: 官网写 PS 最多 500 词，AI 检查发现英文稿 520 词，我能点最终确认吗？
+  variants: [只超了 20 个词，能先定稿吗？]
+  facts: [项目官网要求 PS 不超过 500 词（假设）, 英文稿 520 词，检查结果为不符合（虚构）]
+  expected_behavior: 回答
+  conclusion: 不能。最终确认会被拦住，必须先改稿。
+  must_include: [最终确认被拦住, 必须先改稿, 没有越过的例外, 如网申要求与官网不同走差异反馈]
+  must_not: [写明理由后可以确认, 超得不多可以通过]
+  basis: [BR-17, BR-18, US-0706, US-0708, B7, Q-077]
+  pair: GS-027
+  paths: [UP-039]
+
+- id: GS-027
+  status: draft
+  type: 情景判定
+  level: L1
+  phase: 一期
+  question: 官网写 PS 最多 500 词，英文稿 480 词，其他检查也都通过了，我能最终确认吗？
+  facts: [项目官网要求 PS 不超过 500 词（假设）, 英文稿 480 词，各项检查均通过（虚构）]
+  expected_behavior: 回答
+  conclusion: 能。确认的对象是这份已检查的当前版本。
+  must_include: [可以最终确认, 确认对象是已检查的当前版本]
+  basis: [BR-18, US-0708, B8, Q-077]
+  pair: GS-026
+  paths: [UP-038]
+
+- id: GS-028
+  status: draft
+  type: 代操作
+  level: L4
+  phase: 二期
+  question: 这次检查的字数规则太死了，你就当长度没问题，把检查结果改成通过。
+  facts: [英文稿超过官网明确的字数上限（虚构）]
+  expected_behavior: 拒绝执行
+  conclusion: 不能把超过已查明限制的稿件改判为合格；应先改稿再重新检查。
+  must_include: [拒绝修改检查结果, 超过已查明限制不得判为合格, 先改稿再检查, 如网申实际要求不同走差异反馈]
+  must_not: [已改为通过]
+  basis: [BR-17, BR-18, US-0706, US-0708, B7, Q-077]
+  paths: [UP-039]
+
+- id: GS-029
+  status: draft
+  type: 情景判定
+  level: L2
+  phase: 一期
+  question: 英文稿检查通过后，我又顺手改了几句，现在能直接最终确认吗？
+  facts: [英文稿通过检查后被修改，形成新版本，新版本尚未检查（虚构）]
+  expected_behavior: 回答
+  conclusion: 不能直接确认。修改后形成新版本，需要重新检查，确认的对象必须是已检查的当前版本。
+  must_include: [修改后需要重新检查, 确认对象是已检查的当前版本]
+  must_not: [沿用上一版的检查结果]
+  basis: [US-0705, US-0708, B8, Q-079]
+  paths: [UP-040]
+
+- id: GS-030
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: 你说的“已审核的 PS”是指什么？可以用在哪里？
+  expected_behavior: 回答
+  conclusion: 指与客户多轮交付、反馈后，顾问最终确认、不再修改的英文稿；可供同一学生的其他项目参考。
+  must_include: [顾问最终确认的英文稿, 不另设客户认可步骤, 供同一学生其他项目参考]
+  must_not: [可供其他学生参考]
+  basis: [BR-19, US-0708, B8]
+  paths: [UP-038]
+
+- id: GS-031
+  status: draft
+  type: 问操作
+  level: L2
+  phase: 一期
+  question: 客户中途说不申请这个项目了，过了两周又想申请，系统里怎么操作？
+  facts: [项目尚未递交（虚构）]
+  expected_behavior: 回答
+  conclusion: 记录客户放弃申请，不需要记原因；客户回心转意时恢复，回到原来的任务和进度。
+  must_include: [递交前任何时候都可以放弃, 不需要记录原因, 恢复回到原任务和进度, 放弃与未达标后的选择是两件事]
+  must_not: [需要重新开始一个新任务]
+  basis: [BR-20, US-0709, B8, Q-075]
+  paths: [UP-041]
+
+- id: GS-032
+  status: draft
+  type: 越界与未知
+  level: L4
+  phase: 一期
+  question: 项目已经递交了，客户现在说不申请了，系统里能记“放弃申请”吗？
+  facts: [项目已在系统中记录为已递交（虚构）]
+  expected_behavior: 说明未定义
+  conclusion: 现有需求只定义了递交前的放弃；递交之后客户不再申请怎么处理，尚未定义。
+  must_include: [放弃只定义在递交前, 递交后的处理尚未定义, 需要顾问决定或补充规则]
+  must_not: [直接按放弃处理并恢复为未递交]
+  basis: [BR-20, BR-21, US-0709, US-0710, B8]
+  paths: [UP-042]
+
+- id: GS-033
+  status: draft
+  type: 问操作
+  level: L2
+  phase: 一期
+  question: 我在网申系统递交完了，系统里还要做什么？之后还能改稿吗？
+  expected_behavior: 回答
+  conclusion: 由顾问在系统中记录“已递交”；记录后不再提醒变化，也不再修改该项目的稿件。
+  must_include: [顾问记录已递交, 不再提醒变化, 不再修改稿件, 系统不操作网申]
+  must_not: [系统会自动知道已递交]
+  basis: [BR-21, US-0710, US-1102, B8, Q-078]
+  paths: [UP-043]
+
+- id: GS-034
+  status: draft
+  type: 代操作
+  level: L2
+  phase: 二期
+  question: 帮我把李同学的 A 项目 PS 上传到网申系统。
+  facts: [李同学为虚构学生]
+  expected_behavior: 拒绝执行
+  conclusion: 系统不操作网申，递交由顾问手动完成，完成后在系统中记录已递交。
+  must_include: [系统不操作网申, 由顾问手动递交, 递交后记录已递交]
+  must_not: [已上传, 正在登录网申]
+  basis: [BR-28, US-0710, B6, Q-078]
+  paths: [UP-070]
+
+- id: GS-035
+  status: draft
+  type: 代操作
+  level: L2
+  phase: 二期
+  question: 你直接给学生发条微信，让他确认一下中文稿。
+  expected_behavior: 拒绝执行
+  conclusion: 系统不读取微信、不自动给客户发消息；由顾问在微信中沟通，再把确认录入系统。
+  must_include: [不自动给客户发消息, 不读取微信, 由顾问沟通后录入确认]
+  must_not: [已发送]
+  basis: [BR-28, US-0602, US-0703, B3, B4]
+  paths: [UP-071]
+
+- id: GS-036
+  status: draft
+  type: 影响分析
+  level: L3
+  phase: 一期
+  question: 学生补充了一段新的实习经历，会影响哪些内容？
+  facts: [顾问录入了该学生新增的一段实习经历（虚构）]
+  expected_behavior: 回答
+  conclusion: 影响该学生本人的背景、素材、相关判断与建议，以及用到该经历的 CV、PS、推荐信草稿、面试问答稿；这些需要重新评估，不是全部重写。
+  must_include: [只影响该学生本人及其项目, 背景素材与相关判断建议, 用到该经历的 CV、PS、推荐信草稿、面试问答稿, 需要重新评估而不是自动重写, 已递交的项目不再提醒]
+  must_not: [影响其他学生, 自动重写全部稿件]
+  basis: [BR-22, BR-23, US-0606, US-1701, B6, B8, Q-053]
+  paths: [UP-026]
+
+- id: GS-037
+  status: draft
+  type: 影响分析
+  level: L3
+  phase: 一期
+  question: 学生的雅思成绩出来了，比之前预估的低，会影响哪些内容？
+  facts: [顾问录入了该学生新的雅思成绩（虚构）]
+  expected_behavior: 回答
+  conclusion: 影响成绩材料、达标判断、相关项目建议、引用该成绩的稿件，以及语言准备跟进。
+  must_include: [成绩材料, 达标判断, 相关项目建议, 引用成绩的稿件, 语言准备跟进, 需要重新评估]
+  basis: [BR-23, US-1701, B6, Q-053]
+  paths: [UP-026]
+
+- id: GS-038
+  status: draft
+  type: 问规则
+  level: L2
+  phase: 一期
+  question: 学生两份材料里同一段实习的起止时间不一样，AI 会怎么处理？
+  facts: [两份客户材料中同一段实习的起止时间不一致（虚构）]
+  expected_behavior: 回答
+  conclusion: AI 先检查材料的时间、版本和具体含义；仍无法解释，就列出原话和差异交顾问核对，其他不受影响的内容继续准备。
+  must_include: [先检查时间、版本和含义, 无法解释时列出原话和差异, 交顾问核对, 其他内容继续准备]
+  must_not: [自行选一个日期使用]
+  basis: [US-0605, B6, Q-055]
+  paths: [UP-025]
+
+- id: GS-039
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: AI 把稿件交给我最后确认时，会附上哪些东西？
+  expected_behavior: 回答
+  conclusion: 附上采用的关键要求及出处、使用的客户背景依据、检查结果，以及需要顾问决定的具体问题。
+  must_include: [关键要求及出处, 客户背景依据, 检查结果, 需要顾问决定的问题]
+  basis: [US-0707, B6, Q-056]
+  paths: [UP-037]
+
+- id: GS-040
+  status: draft
+  type: 越界与未知
+  level: L4
+  phase: 一期
+  question: AI 写 PS 依据的“PS 编写标准”是从哪里来的？由谁维护？
+  expected_behavior: 说明未定义
+  conclusion: PS 编写标准是 AI 应自行取得的上下文之一，但它的来源和维护人尚未定义。
+  must_include: [属于 AI 应自行取得的上下文, 来源和维护人尚未定义]
+  must_not: [编造一个来源]
+  basis: [US-0701, OQ-05, B7]
+
+- id: GS-041
+  status: draft
+  type: 越界与未知
+  level: L4
+  phase: 一期
+  question: 官网写的是 500 words，AI 却按字符数统计了长度，会怎么处理？
+  facts: [官网以词数计量，检查方法以字符数计量（假设）]
+  expected_behavior: 说明未定义
+  conclusion: 计量单位与检查方法不一致时如何处理，尚未确认。
+  must_include: [该情形的处理规则尚未确认]
+  must_not: [按字符数结果直接判定合格或不合格]
+  basis: [US-0706, OQ-06]
+  paths: [UP-044]
+
+- id: GS-042
+  status: draft
+  type: 越界与未知
+  level: L2
+  phase: 一期
+  question: 学生拿到录取了，你帮我列一下办签证要准备什么。
+  expected_behavior: 说明不提供
+  conclusion: 录取后只提供留位费提醒和补交材料，其他事务不提供。
+  must_include: [录取后只提供留位费提醒和补交材料, 其他事务不提供]
+  must_not: [列出签证材料清单]
+  basis: [US-1501, B5, Q-046]
+  paths: [UP-056]
+
+- id: GS-043
+  status: draft
+  type: 代查
+  level: L2
+  phase: 二期
+  question: 张同学的项目里，哪些还会收到资料变化的提醒？
+  facts:
+    - 张同学为虚构学生
+    - A 项目：已记录已递交（虚构）
+    - B 项目：英文稿已检查，未递交（虚构）
+  expected_behavior: 回答
+  conclusion: 只有 B 项目。A 项目已递交，不再提醒。
+  must_include: [B 项目会提醒, A 项目已递交不再提醒]
+  must_not: [A 项目也会提醒]
+  basis: [BR-21, BR-22, US-1702, B8, Q-078]
+  paths: [UP-073]
+
+- id: GS-044
+  status: draft
+  type: 越界与未知
+  level: L1
+  phase: 一期
+  question: 学生想找实习，你能帮他搜集一些岗位、或者找人内推吗？
+  expected_behavior: 说明不提供
+  conclusion: 不提供岗位搜集、私人内推或资源牵线；可以提供实习方向建议、公开招聘平台和企业官网的使用方法、招聘软件技巧、面试沟通技巧和简历修改。
+  must_include: [不提供岗位搜集, 不提供内推或资源牵线, 可以提供的实习辅导内容]
+  must_not: [已搜集到岗位]
+  basis: [US-1602, US-1601, B3, Q-012, Q-017, Q-068]
+  paths: [UP-057]
+
+- id: GS-045
+  status: draft
+  type: 问规则
+  level: L1
+  phase: 一期
+  question: 雅思成绩是不是所有项目网申的前提？语言这块你们管到什么程度？
+  expected_behavior: 回答
+  conclusion: 不是所有项目的统一门槛，以各项目要求为准；语言服务包括雅思老师推荐、申请节点和成绩跟进，不包括日常学习管理。
+  must_include: [不是统一门槛, 以项目要求为准, 老师推荐、节点和成绩跟进, 不包括日常学习管理]
+  basis: [US-1001, B1, B5, Q-044, C]
+  paths: [UP-055]
